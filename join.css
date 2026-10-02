@@ -51,3 +51,11 @@ button:disabled { opacity: .45; }
 
 .opts.many { grid-template-columns: 1fr 1fr; gap: 8px; }
 .opts.many .opt { font-size: .92rem; padding: 12px 10px; line-height: 1.25; }
+
+.tabs { display: flex; gap: 6px; margin: 18px 0 8px; }
+.tabs button { padding: 10px; font-size: .95rem; }
+.tabs button.on { background: var(--gold); color: #1a1408; border-color: var(--gold); font-weight: bold; }
+label.check { display: flex; align-items: center; gap: 10px; color: var(--ink); font-size: .95rem; }
+label.check input { width: 22px; height: 22px; margin: 0; }
+.tvcard .bigcode { font-size: 3rem; letter-spacing: .3em; color: var(--gold); text-align: center; margin: 6px 0; }
+.tvcard p { margin: 6px 0; }

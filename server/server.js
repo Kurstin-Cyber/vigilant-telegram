@@ -16,7 +16,7 @@ const ROOT = path.join(__dirname, "..");
 const ROOM_TTL_MS = 12 * 60 * 60 * 1000;
 const CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ"; // no I or O, to avoid confusion with 1 and 0
 const MAX_PLAYERS = 40, MAX_ROOMS = 300, MAX_NAME = 14;
-const COMMANDS = new Set(["start", "pause", "resume", "skip", "auto", "closeAsk", "end", "kick", "makeHost"]);
+const COMMANDS = new Set(["start", "pause", "resume", "skip", "auto", "closeAsk", "end", "kick", "makeHost", "openTv"]);
 const MIME = {
   ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8",
   ".json": "application/json", ".mp3": "audio/mpeg", ".png": "image/png", ".svg": "image/svg+xml", ".ico": "image/x-icon",
@@ -48,14 +48,14 @@ function useStore(s) { store = s; }
 
 function snapshot(room) {
   return {
-    code: room.code, tvToken: room.tvToken, created: room.created, hostId: room.hostId, phase: room.phase, status: room.status,
+    code: room.code, tvToken: room.tvToken, tvWindow: room.tvWindow, created: room.created, hostId: room.hostId, phase: room.phase, status: room.status,
     ask: room.ask, result: room.result, cmdSeq: room.cmdSeq,
-    players: [...room.players.values()].map((p) => ({ id: p.id, token: p.token, name: p.name })),
+    players: [...room.players.values()].map((p) => ({ id: p.id, token: p.token, name: p.name, observer: !!p.observer })),
   };
 }
 function restore(s) {
   const room = makeRoom(s.code);
-  Object.assign(room, { tvToken: s.tvToken, created: s.created, hostId: s.hostId, phase: s.phase, status: s.status, ask: s.ask, result: s.result, cmdSeq: s.cmdSeq || 0 });
+  Object.assign(room, { tvToken: s.tvToken || null, tvWindow: s.tvWindow || 0, created: s.created, hostId: s.hostId, phase: s.phase, status: s.status, ask: s.ask, result: s.result, cmdSeq: s.cmdSeq || 0 });
   for (const p of s.players) room.players.set(p.id, { ...p, streams: new Set() });
   return room;
 }
@@ -97,7 +97,7 @@ async function newCode() {
 
 function makeRoom(code) {
   return {
-    code, tvToken: crypto.randomBytes(12).toString("hex"), created: Date.now(), touched: Date.now(),
+    code, tvToken: null, tvWindow: 0, created: Date.now(), touched: Date.now(),
     players: new Map(), hostId: null, phase: "lobby",
     status: { text: "", episode: 0, paused: false, auto: true },
     ask: null, result: null, cmdSeq: 0, cmds: [], tvs: new Set(),
@@ -105,20 +105,20 @@ function makeRoom(code) {
 }
 
 // ---- views ----
-const playersView = (room) => [...room.players.values()].map((p) => ({ id: p.id, name: p.name, online: isOnline(p), host: p.id === room.hostId }));
+const playersView = (room) => [...room.players.values()].map((p) => ({ id: p.id, name: p.name, online: isOnline(p), host: p.id === room.hostId, observer: !!p.observer }));
 const tvView = (room) => ({
   code: room.code, phase: room.phase, status: room.status, hostId: room.hostId, players: playersView(room),
   ask: room.ask ? { id: room.ask.id, answers: room.ask.answers } : null, cmds: room.cmds.slice(-30),
 });
 function phoneView(room, p) {
-  const online = [...room.players.values()].filter(isOnline).length;
+  const online = [...room.players.values()].filter((x) => isOnline(x) && !x.observer).length;
   const ask = room.ask && {
     id: room.ask.id, ...room.ask.def, deadline: room.ask.deadline, yourPicks: room.ask.answers[p.id] ?? null,
     answered: Object.keys(room.ask.answers).length, total: online,
   };
   return {
-    code: room.code, you: { id: p.id, name: p.name, host: p.id === room.hostId }, players: playersView(room),
-    phase: room.phase, status: room.status, ask, result: room.result, tvOnline: room.tvs.size > 0, now: Date.now(),
+    code: room.code, you: { id: p.id, name: p.name, host: p.id === room.hostId, observer: !!p.observer }, players: playersView(room),
+    phase: room.phase, status: room.status, ask, result: room.result, tvOnline: room.tvs.size > 0, needsTv: !room.tvToken, tvWindow: room.tvWindow > Date.now(), now: Date.now(),
   };
 }
 function broadcast(room) {
@@ -149,13 +149,13 @@ function checkHost(room) {
   room.hostTimer.unref?.();
 }
 
-function addPlayer(room, rawName) {
+function addPlayer(room, rawName, observer = false) {
   if (room.players.size >= MAX_PLAYERS) throw new HttpError(400, "This game is full.");
   let name = clean(rawName, MAX_NAME) || "Detective";
   const taken = new Set([...room.players.values()].map((p) => p.name.toLowerCase()));
   const base = name; let k = 2;
   while (taken.has(name.toLowerCase())) name = `${base.slice(0, MAX_NAME - 3)} ${k++}`;
-  const player = { id: crypto.randomBytes(4).toString("hex"), token: crypto.randomBytes(12).toString("hex"), name, streams: new Set() };
+  const player = { id: crypto.randomBytes(4).toString("hex"), token: crypto.randomBytes(12).toString("hex"), name, observer: !!observer, streams: new Set() };
   room.players.set(player.id, player);
   if (!room.hostId) room.hostId = player.id; // the first detective in runs the night
   return player;
@@ -224,6 +224,7 @@ function cleanResult(r = {}) {
 // What a phone can do. Commands are host-only.
 const PLAYER_ACTIONS = {
   answer: (room, p, body) => {
+    if (p.observer) throw new HttpError(400, "You're moderating, so you don't vote.");
     if (!room.ask || room.ask.id !== body.askId) throw new HttpError(409, "That question has already closed.");
     const picks = body.picks;
     if (typeof picks === "string") room.ask.answers[p.id] = clean(picks, 40);
@@ -240,6 +241,8 @@ const PLAYER_ACTIONS = {
       for (const res of t.streams) res.end();
       room.players.delete(t.id);
       if (room.ask) delete room.ask.answers[t.id];
+    } else if (cmd === "openTv") {
+      room.tvWindow = Date.now() + 10 * 60_000; // for ten minutes a big screen can connect by typing the code
     } else if (cmd === "makeHost") {
       if (!room.players.has(body.arg) || body.arg === p.id) throw new HttpError(400, "Can't hand hosting to that player.");
       room.hostId = body.arg;
@@ -270,8 +273,16 @@ async function handleApi(req, res, parts) {
   // POST /api/rooms -> the TV opens a room
   if (parts.length === 1 && req.method === "POST") {
     if (rooms.size >= MAX_ROOMS) throw new HttpError(503, "The server is busy. Try again in a few minutes.");
+    const body = await readJson(req);
     const room = makeRoom(await newCode());
     rooms.set(room.code, room);
+    if (body.name !== undefined) { // a moderator made this game on their phone; a big screen connects later with the code
+      const player = addPlayer(room, body.name, !!body.observer);
+      room.tvWindow = Date.now() + 10 * 60_000;
+      saveSoon(room);
+      return send(res, 200, { code: room.code, id: player.id, token: player.token });
+    }
+    room.tvToken = crypto.randomBytes(12).toString("hex"); // the big screen made this game itself
     saveSoon(room);
     return send(res, 200, { code: room.code, tvToken: room.tvToken });
   }
@@ -289,10 +300,20 @@ async function handleApi(req, res, parts) {
     return send(res, 200, { code: room.code, id: player.id, token: player.token });
   }
 
+  // POST /api/rooms/CODE/tv-claim: a big screen connects to a game the moderator opened on their phone
+  if (action === "tv-claim" && req.method === "POST") {
+    if (room.tvToken && !(room.tvWindow > Date.now())) return send(res, 403, { error: "That game already has a big screen. Ask the moderator to tap \"Show on a TV\"." });
+    for (const r of room.tvs) r.end();
+    room.tvToken = crypto.randomBytes(12).toString("hex");
+    room.tvWindow = 0;
+    broadcast(room);
+    return send(res, 200, { code: room.code, tvToken: room.tvToken });
+  }
+
   // ---- the TV ----
   if (action === "tv") {
     const tvToken = req.headers["x-tv-token"] || url.searchParams.get("token");
-    if (!tvToken || tvToken !== room.tvToken) return send(res, 401, { error: "This isn't the screen for that room." });
+    if (!tvToken || !room.tvToken || tvToken !== room.tvToken) return send(res, 401, { error: "This isn't the screen for that room." });
     if (parts[3] === undefined && req.method === "GET") return openStream(req, res, room, room.tvs, () => checkHost(room));
     if (parts[3] === undefined && req.method === "HEAD") return res.writeHead(204).end();
     const handler = TV_ACTIONS[parts[3]];
@@ -324,7 +345,8 @@ function createServer() {
       if (parts[0] === "api" && parts[1] === "rooms") return await handleApi(req, res, parts.slice(1));
       if (req.method !== "GET" && req.method !== "HEAD") return send(res, 404, { error: "Not found" });
       if (pathname === "/tv") return serveFile(res, "/index.html");
-      if (pathname === "/tv/" || pathname === "/host") { res.writeHead(302, { location: "/tv" }); return res.end(); }
+      if (pathname === "/tv/") { res.writeHead(302, { location: "/tv" }); return res.end(); }
+      if (pathname === "/host") { res.writeHead(302, { location: "/?host=1" }); return res.end(); }
       if (pathname === "/" || /^\/[A-Za-z]{4}$/.test(pathname) || pathname === "/join") return serveFile(res, "/join.html");
       if (PUBLIC.test(pathname)) return serveFile(res, pathname);
       return send(res, 404, { error: "Not found" });

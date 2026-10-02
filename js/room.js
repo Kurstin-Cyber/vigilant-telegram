@@ -6,7 +6,7 @@ const Room = (() => {
   const listeners = {};
   const emit = (ev, ...a) => (listeners[ev] || []).forEach(f => f(...a));
   const on = (ev, fn) => { (listeners[ev] = listeners[ev] || []).push(fn); };
-  const onlineIds = () => players.filter(p => p.online).map(p => p.id);
+  const onlineIds = () => players.filter(p => p.online && !p.observer).map(p => p.id);
   const KEY = 'bf-tv-room';
   const store = {
     get() { try { return JSON.parse(sessionStorage.getItem(KEY)); } catch (e) { return null; } },
@@ -22,17 +22,29 @@ const Room = (() => {
     method: 'POST', headers: { 'content-type': 'application/json', 'x-tv-token': tvToken }, body: JSON.stringify(body || {})
   }).catch(() => {});
 
-  /* Open a room (or pick up the one this screen already had, after a reload). */
+  /* Pick up the room this screen already had (after a reload). Returns the code, or null if there is none. */
   async function open() {
     const saved = store.get();
-    if (saved) {
-      const r = await fetch(`api/rooms/${saved.code}/tv?token=${saved.tvToken}`, { method: 'HEAD' }).catch(() => null);
-      if (r && r.ok) { code = saved.code; tvToken = saved.tvToken; connect(); return code; }
-      store.del();
-    }
+    if (!saved) return null;
+    const r = await fetch(`api/rooms/${saved.code}/tv?token=${saved.tvToken}`, { method: 'HEAD' }).catch(() => null);
+    if (r && r.ok) { code = saved.code; tvToken = saved.tvToken; connect(); return code; }
+    store.del();
+    return null;
+  }
+  /* The big screen opens a brand-new game itself. */
+  async function create() {
     const res = await fetch('api/rooms', { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}' });
     if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || 'Could not open a room.');
     const j = await res.json();
+    code = j.code; tvToken = j.tvToken; store.set({ code, tvToken });
+    connect();
+    return code;
+  }
+  /* The big screen connects to a game the moderator made on their phone. */
+  async function claim(c) {
+    const res = await fetch(`api/rooms/${c}/tv-claim`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}' });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(res.status === 404 ? 'No game with that code. The moderator needs to tap "Host a game" on their phone first.' : (j.error || 'Could not connect.'));
     code = j.code; tvToken = j.tvToken; store.set({ code, tvToken });
     connect();
     return code;
@@ -83,7 +95,7 @@ const Room = (() => {
   function close(id, result) { finish(id, 'host', result); }
 
   return {
-    available, open, on, ask, cancel, close, showResult, setStatus,
+    available, open, create, claim, on, ask, cancel, close, showResult, setStatus,
     code: () => code, players: () => players, hostId: () => hostId, onlineIds,
     live: () => !!code && connected && onlineIds().length > 0,
     joinUrl: () => (location.origin + '/' + code),

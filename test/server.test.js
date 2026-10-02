@@ -133,6 +133,43 @@ test("a long evidence list reaches the phones intact", { timeout: 15000 }, async
   assert.equal(phone.ask.options.length, 40);
 });
 
+test("a moderator can create the game on their phone and a big screen connects with the code", { timeout: 15000 }, async () => {
+  const mod = await post("/api/rooms", { name: "Mo", observer: true });
+  assert.equal(mod.status, 200);
+  const { code } = mod.body;
+  assert.match(code, /^[A-Z]{4}$/);
+
+  // the TV is not connected yet, so nothing can be sent as the TV
+  assert.equal((await post(`/api/rooms/${code}/tv/status`, {}, { "x-tv-token": "x" })).status, 401);
+  const view0 = await stateWhen(`/api/rooms/${code}/events?token=${mod.body.token}`, () => true);
+  assert.equal(view0.needsTv, true);
+  assert.equal(view0.you.host, true);
+  assert.equal(view0.you.observer, true);
+
+  // the big screen types the code
+  assert.equal((await post(`/api/rooms/ZZZZ/tv-claim`)).status, 404);
+  const claim = await post(`/api/rooms/${code.toLowerCase()}/tv-claim`);
+  assert.equal(claim.status, 200);
+  assert.ok(claim.body.tvToken);
+  // a second screen cannot grab it, unless the moderator allows it
+  assert.equal((await post(`/api/rooms/${code}/tv-claim`)).status, 403);
+  assert.equal((await post(`/api/rooms/${code}/command`, { cmd: "openTv" }, { "x-player-token": mod.body.token })).status, 200);
+  const claim2 = await post(`/api/rooms/${code}/tv-claim`);
+  assert.equal(claim2.status, 200);
+  assert.notEqual(claim2.body.tvToken, claim.body.tvToken);
+  assert.equal((await post(`/api/rooms/${code}/tv/status`, {}, { "x-tv-token": claim.body.tvToken })).status, 401); // the old screen is out
+
+  // a moderator who is not playing cannot vote and is not counted as a voter
+  const pat = (await post(`/api/rooms/${code}/join`, { name: "Pat" })).body;
+  const tv = { "x-tv-token": claim2.body.tvToken };
+  await post(`/api/rooms/${code}/tv/ask`, { id: 1, def: { kind: "pick", prompt: "Which?", options: [{ id: "a", label: "A" }] } }, tv);
+  assert.equal((await post(`/api/rooms/${code}/answer`, { askId: 1, picks: "a" }, { "x-player-token": mod.body.token })).status, 400);
+  assert.equal((await post(`/api/rooms/${code}/answer`, { askId: 1, picks: "a" }, { "x-player-token": pat.token })).status, 200);
+  const seen = await stateWhen(`/api/rooms/${code}/events?token=${pat.token}`, (s) => s.ask);
+  assert.equal(seen.ask.total, 1);
+  assert.equal(seen.players.find((p) => p.name === "Mo").observer, true);
+});
+
 test("rooms are saved and come back after a restart", async () => {
   const saved = new Map();
   const { useStore } = require("../server/server");

@@ -674,7 +674,7 @@ const has = id => !!G && G.clues.includes(id);
   function syncPlayers(list) {
     if (G && G.room) {
       G.players = G.players || [];
-      list.forEach(p => {
+      list.filter(p => !p.observer).forEach(p => {
         const have = G.players.find(x => x.id === p.id);
         if (have) have.name = p.name; else G.players.push({ id: p.id, name: p.name });
       });
@@ -685,14 +685,14 @@ const has = id => !!G && G.clues.includes(id);
   function renderRoster(list) {
     const box = $('roster'); if (!box) return;
     if (!IS_TV || !G || !G.room || !$('hud').classList.contains('on')) { box.innerHTML = ''; return; }
-    box.innerHTML = `<span class="rcode">Room <b>${Room.code()}</b></span>` + list.map(p => `<span class="pchip ${p.online ? '' : 'off'}">${p.host ? '👑 ' : ''}${esc(p.name)}</span>`).join('');
+    box.innerHTML = `<span class="rcode">Room <b>${Room.code()}</b></span>` + list.map(p => `<span class="pchip ${p.online ? '' : 'off'}">${p.host ? '👑 ' : ''}${p.observer ? '🎛️ ' : ''}${esc(p.name)}</span>`).join('');
   }
   function renderLobbyPlayers(list) {
     const box = $('lPlayers'); if (!box) return;
-    box.innerHTML = list.length ? list.map(p => `<span class="pchip ${p.online ? '' : 'off'}">${p.host ? '👑 ' : ''}${esc(p.name)}</span>`).join('') : '<span class="tip">Nobody yet. Scan the code to join!</span>';
-    const n = list.filter(p => p.online).length, host = list.find(p => p.host);
+    box.innerHTML = list.length ? list.map(p => `<span class="pchip ${p.online ? '' : 'off'}">${p.host ? '👑 ' : ''}${p.observer ? '🎛️ ' : ''}${esc(p.name)}</span>`).join('') : '<span class="tip">Nobody yet. Scan the code to join!</span>';
+    const n = list.filter(p => p.online && !p.observer).length, host = list.find(p => p.host);
     const start = $('lStart'), cnt = $('lCount'), hint = $('lHint');
-    if (cnt) cnt.textContent = `Detectives (${list.length})`;
+    if (cnt) cnt.textContent = `Detectives (${list.filter(p => !p.observer).length})`;
     if (start) start.disabled = n === 0;
     if (hint) hint.textContent = host ? `${host.name} is the host and can start the story from their phone. (Or press the button here.)` : 'The first detective to join becomes the host.';
   }
@@ -721,7 +721,7 @@ const has = id => !!G && G.clues.includes(id);
   }
   function startGroupGame() {
     Sound.init(); Sound.setMuted(settings.muted);
-    const players = Room.players().map(p => ({ id: p.id, name: p.name }));
+    const players = Room.players().filter(p => !p.observer).map(p => ({ id: p.id, name: p.name }));
     save = { cur: null, epStart: {}, completed: 0 };
     E.overlay.classList.remove('title'); closeOverlay(); $('hud').classList.add('on');
     G = newG(); tvPaused = false;
@@ -735,6 +735,24 @@ const has = id => !!G && G.clues.includes(id);
     E.overlay.classList.remove('title'); closeOverlay(); $('hud').classList.add('on');
     startScene(save.cur.ep, save.cur.scene, { noIntro: save.cur.scene !== (EPS[save.cur.ep].titleScene || 0) });
   }
+  /* No game yet on this screen: start one here, or connect to the moderator's game by its code. */
+  function showTvStart(error) {
+    E.overlay.classList.remove('title');
+    overlay(`<div class="panel center wide"><div class="eyebrow">Group night</div><h2>The Blackwood Files</h2>
+      <div class="choose"><div class="pick"><h3>Start a game here</h3><p>Everyone scans the QR code. The first person to join becomes the moderator.</p><button class="big" id="sNew">Start a new game night</button></div>
+      <div class="pick"><h3>The moderator already has a game</h3><p>On their phone they opened this website and tapped <b>Host a game</b>. Type the code they see:</p>
+      <input id="sCode" class="codebox" maxlength="4" autocomplete="off" autocapitalize="characters" placeholder="ABCD"><button id="sGo">Connect this screen</button><p class="error" id="sErr">${esc(error || '')}</p></div></div>
+      <button id="sSolo">Play on this screen only</button></div>`, true);
+    $('sNew').onclick = async () => { try { await Room.create(); showTvLobby(); } catch (err) { showTvStart(err.message); } };
+    const go = async () => {
+      const c = $('sCode').value.trim().toUpperCase();
+      if (!/^[A-Z]{4}$/.test(c)) return ($('sErr').textContent = 'Codes are 4 letters.');
+      try { await Room.claim(c); showTvLobby(); } catch (err) { showTvStart(err.message); }
+    };
+    $('sGo').onclick = go; $('sCode').onkeydown = ev => { if (ev.key === 'Enter') go(); };
+    $('sSolo').onclick = () => { location.href = 'index.html'; };
+    setTimeout(() => $('sCode') && $('sCode').focus(), 50);
+  }
   async function showTvLobby() {
     clearTimers(); frames = []; hideChoices(); E.dialog.classList.remove('on'); E.card.classList.remove('on'); E.tbc.classList.remove('on');
     $('tint').classList.remove('on'); E.stage.classList.remove('cliffmode', 'fade');
@@ -743,11 +761,13 @@ const has = id => !!G && G.clues.includes(id);
     $('hud').classList.remove('on'); $('roster').innerHTML = '';
     overlay(`<div class="titlescreen"><div class="eyebrow">Opening the room…</div><h1>The Blackwood Files</h1></div>`, true);
     E.overlay.classList.add('title');
-    try { await Room.open(); } catch (err) {
+    let opened = null;
+    try { opened = await Room.open(); } catch (err) {
       overlay(`<div class="panel center"><h2>Can't open group night</h2><p>${esc(err.message || 'The game server is not reachable.')}</p><button class="big" id="lRetry">Try again</button><button id="lSolo">Play on this screen only</button></div>`);
       $('lRetry').onclick = showTvLobby; $('lSolo').onclick = () => { location.href = 'index.html'; };
       return;
     }
+    if (!opened) return showTvStart();
     if (!tvWired) { tvWired = true; Room.on('players', syncPlayers); Room.on('cmd', onHostCommand); }
     const url = Room.joinUrl(), canResume = !!(save.cur && save.cur.snap && JSON.parse(save.cur.snap).room);
     let qr = '';

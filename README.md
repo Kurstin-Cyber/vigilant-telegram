@@ -6,13 +6,21 @@ December, 1926. A blizzard seals Blackwood Manor. Four episodes, each ending on 
 
 ## Group night (the main way to play)
 
-1. Open **`/tv`** on the big screen (a TV, a projector, or a laptop on HDMI). It shows the story preview, a **QR code** and a 4-letter room code.
-2. Everyone scans the code with their phone camera (or opens the address and types the code), then enters a name.
-3. The **first person to join is the host** and starts the story from their phone. They can also pause, skip a line, turn auto-play on or off, close a vote early and remove players, and they can hand hosting to someone else. The host gets no extra votes.
-4. The story plays itself on the big screen, with voices and music. When the story needs a decision, every phone shows the same options and the **most popular choice wins**. At the end of every episode, and again before the finale, everyone votes secretly on who they think the killers are. The group's verdict decides whom the Inspector accuses.
-5. A **scoreboard** at the end shows who followed the clues best.
+There are two ways to start, like Squad Bingo. Pick whichever suits the room.
 
-Phones that lock or reload rejoin by themselves. If the TV is reloaded the room is still there.
+**A. The moderator starts it on their phone**
+1. On a phone, open the site and tap **Host a game** (or go to `/host`). Enter a name. Tick *I'll only moderate* if you don't want to vote. You get a 4-letter code.
+2. On the big screen (a TV, projector or laptop), open **`/tv`**, type the code and tap **Connect this screen**. The screen shows the story preview, a **QR code** and the room code.
+3. Everyone else scans the QR code (or opens the site, taps **Join a game** and types the code) and enters a name.
+4. The moderator taps **Start the story** on their phone.
+
+**B. The big screen starts it**
+1. Open **`/tv`** and tap **Start a new game night**.
+2. Everyone scans the QR code. The first person to join becomes the moderator and starts the story from their phone.
+
+The moderator can pause, skip a line, turn auto-play on or off, close a vote early, remove players, hand the moderator role to someone else, or move the game to a different screen ("Allow a big screen to connect").
+
+**How the night plays.** The story plays itself on the big screen, with voices and music. When it needs a decision, every phone shows the same options and the **most popular choice wins**. At the end of every episode, and again before the finale, everyone votes secretly on who they think the killers are. The group's verdict decides whom the Inspector accuses. A **scoreboard** at the end shows who followed the clues best. Phones that lock or reload rejoin by themselves, and the room survives a reload of the big screen.
 
 ### Run it
 

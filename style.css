@@ -222,3 +222,12 @@ button.big { background: var(--gold) !important; color: #1a1408 !important; bord
 .lobby .rcol #lSolo { background: none; border: 0; color: var(--dim); font-size: .85rem; text-decoration: underline; padding: 4px; letter-spacing: .03em; }
 .qrbox { width: min(360px, 100%); padding: clamp(12px, 1.6vw, 20px); margin-bottom: 12px; }
 .lobby .rcol .tip { margin: 6px 0 10px; font-size: .85rem; }
+
+.choose { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; margin: 18px 0; text-align: left; }
+.choose .pick { background: rgba(40, 30, 18, .6); border: 1px solid var(--line); border-radius: 12px; padding: 18px; }
+.choose h3 { font-weight: normal; color: var(--gold); margin: 0 0 8px; letter-spacing: .06em; }
+.choose p { color: var(--dim); font-size: .95rem; }
+.choose button { width: 100%; margin: 8px 0 0; }
+.codebox { width: 100%; text-align: center; font: inherit; font-size: 2rem; letter-spacing: .4em; text-transform: uppercase; padding: 10px; background: #100c09; color: var(--ink); border: 1px solid var(--line); border-radius: 10px; }
+.error { color: #f0a090; min-height: 1.3em; }
+@media (max-width: 800px) { .choose { grid-template-columns: 1fr; } }
