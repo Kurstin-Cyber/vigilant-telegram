@@ -257,7 +257,7 @@ const Art = (() => {
     if (id === 'pennington') {
       body = `<path d="M10 440 C10 345 70 305 150 305 C230 305 290 345 290 440 Z" fill="${P.suit}"/><path d="M118 305 L150 400 L182 305 Z" fill="#e8e4da"/><path d="M132 318 L150 328 L168 318 L168 338 L150 328 L132 338 Z" fill="#e8e4da" stroke="#ccc" stroke-width="1"/><path d="M60 330 L110 440 H20 Z M240 330 L190 440 H280 Z" fill="#0c0c10"/>`;
       behind = `<path d="M92 190 q-6 -50 28 -70 q30 -12 60 0 q34 20 28 70 q-8 -40 -58 -44 q-50 4 -58 44z" fill="#8c8c92"/>`;
-      front = `<path d="M90 160 q-8 40 4 62 M210 160 q8 40 -4 62" stroke="#a0a0a8" stroke-width="12" fill="none" stroke-linecap="round"/><path d="M118 236 q32 30 64 0" stroke="#7a7a80" stroke-width="3" fill="none"/>`;
+      front = `<path d="M90 160 q-8 40 4 62 M210 160 q8 40 -4 62" stroke="#a0a0a8" stroke-width="12" fill="none" stroke-linecap="round"/><path d="M126 224 q-4 14 2 26 M174 224 q4 14 -2 26" stroke="#000" stroke-opacity=".16" stroke-width="3" fill="none" stroke-linecap="round"/>`;
     } else if (id === 'margaret') {
       body = `<path d="M10 440 C10 345 70 305 150 305 C230 305 290 345 290 440 Z" fill="${P.suit}"/><path d="M104 312 q46 40 92 0" fill="none" stroke="#ece6dc" stroke-width="10" stroke-dasharray="1 13" stroke-linecap="round"/><path d="M104 305 q46 56 92 0 v-22 h-92 z" fill="#1e1328"/><path d="M118 296 h64 v24 h-64 z" fill="#eadfd0" opacity=".85"/>`;
       behind = `<circle cx="150" cy="112" r="36" fill="#a9a7b0"/><path d="M82 200 q-12 -90 68 -92 q80 2 68 92 q-14 -52 -68 -54 q-54 2 -68 54z" fill="#b6b4bd"/>`;
