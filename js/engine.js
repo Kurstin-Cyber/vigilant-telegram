@@ -15,7 +15,7 @@ const has = id => !!G && G.clues.includes(id);
 
   /* ---------- persistence ---------- */
   let save = { cur: null, epStart: {}, completed: 0 };
-  let settings = { auto: true, muted: false };
+  let settings = { auto: true, muted: false, voice: true };
   try { const s = JSON.parse(localStorage.getItem(SAVE_KEY)); if (s) save = Object.assign(save, s); } catch (e) {}
   try { const s = JSON.parse(localStorage.getItem(SET_KEY)); if (s) settings = Object.assign(settings, s); } catch (e) {}
   const persist = () => { try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); localStorage.setItem(SET_KEY, JSON.stringify(settings)); } catch (e) {} };
@@ -23,17 +23,19 @@ const has = id => !!G && G.clues.includes(id);
   const snap = () => JSON.stringify(G);
 
   /* ---------- timers / flow ---------- */
-  let timers = new Set(), pausedQ = [], paused = false, waiter = null, typing = null, frames = [], busy = false;
+  let timers = new Set(), pausedQ = [], paused = false, waiter = null, typing = null, frames = [], busy = false, flowToken = 0;
   function after(ms, fn) {
     const t = setTimeout(() => { timers.delete(t); if (paused) pausedQ.push(fn); else fn(); }, ms);
     timers.add(t); return t;
   }
   function clearTimers() {
+    flowToken++; Voice.stop(false);
     timers.forEach(clearTimeout); timers.clear(); pausedQ = []; waiter = null;
     if (typing) { clearInterval(typing.iv); typing = null; }
   }
   function setPaused(p) {
     paused = p;
+    if (p) Voice.pause(); else Voice.resume();
     if (!p) { const q = pausedQ; pausedQ = []; q.forEach(f => f()); }
   }
   function go(ms, fn, skippable = true) {
@@ -44,6 +46,7 @@ const has = id => !!G && G.clues.includes(id);
   function advance() {
     if (paused) return;
     if (typing) { finishTyping(); return; }
+    if (Voice.busy()) { Voice.stop(true); return; }
     if (waiter && waiter.skippable) { const w = waiter; waiter = null; clearTimeout(w.t); timers.delete(w.t); w.fn(); }
   }
 
@@ -121,16 +124,16 @@ const has = id => !!G && G.clues.includes(id);
 
   /* ---------- text ---------- */
   const PITCH = { pennington: 0.8, margaret: 1.1, vivian: 1.45, hale: 0.95, dobbs: 1.25, you: 1.0, pike: 0.85 };
-  function typeText(text, who, cb) {
+  function typeText(text, who, cb, ms = 24, blips = true) {
     E.dtext.textContent = '';
     E.dnext.style.opacity = 0;
     let i = 0;
     const iv = setInterval(() => {
       if (paused) return;
       i++; E.dtext.textContent = text.slice(0, i);
-      if (who && i % 3 === 0 && /\w/.test(text[i - 1])) Sound.blip(PITCH[who] || 1);
+      if (blips && who && i % 3 === 0 && /\w/.test(text[i - 1])) Sound.blip(PITCH[who] || 1);
       if (i >= text.length) finishTyping();
-    }, 24);
+    }, ms);
     typing = { iv, text, cb };
   }
   function finishTyping() {
@@ -139,12 +142,13 @@ const has = id => !!G && G.clues.includes(id);
     clearInterval(iv); typing = null; E.dtext.textContent = text; cb();
   }
   function beat(text, done) {
-    if (settings.auto) {
-      go(Math.min(8000, Math.max(1700, 1000 + text.length * 44)), done);
-    } else {
-      E.dnext.style.opacity = 1;
-      go(3600000, done);
-    }
+    const proceed = skipped => {
+      if (skipped) { done(); return; }
+      if (settings.auto) go(Voice.isOn() ? 650 : Math.min(8000, Math.max(1700, 1000 + text.length * 44)), done);
+      else { E.dnext.style.opacity = 1; go(3600000, done); }
+    };
+    if (Voice.busy()) { const tok = flowToken; Voice.whenDone(sk => { if (tok === flowToken) proceed(sk); }); }
+    else proceed(false);
   }
   function showDialog(who, text, e, done) {
     E.stage.classList.remove('choosing');
@@ -155,8 +159,11 @@ const has = id => !!G && G.clues.includes(id);
     E.dname.style.display = who ? '' : 'none';
     spotlight(who);
     if (e) setExpr(who, e);
-    typeText(text, who, () => beat(text, done));
+    const spoke = voiceOn() && Voice.speak(who, text);
+    typeText(text, who, () => beat(text, done), spoke ? 52 : 24, !spoke);
   }
+  const voiceOn = () => settings.voice && !settings.muted;
+  function applyVoice() { Voice.setOn(voiceOn()); }
 
   /* ---------- scenes ---------- */
   function startScene(ei, si, opts = {}) {
@@ -351,6 +358,9 @@ const has = id => !!G && G.clues.includes(id);
     $('bAuto').classList.toggle('on', settings.auto);
     $('bAuto').textContent = settings.auto ? 'Auto: on' : 'Auto: off';
     $('bSound').textContent = settings.muted ? 'Sound: off' : 'Sound: on';
+    $('bVoice').style.display = Voice.supported() ? '' : 'none';
+    $('bVoice').textContent = settings.voice ? 'Voice: on' : 'Voice: off';
+    $('bVoice').classList.toggle('on', settings.voice);
     const n = G ? G.clues.length : 0;
     $('bFile').textContent = `Case file (${n}/${Object.keys(CLUES).length})`;
   }
@@ -374,18 +384,20 @@ const has = id => !!G && G.clues.includes(id);
   }
   function openMenu() {
     overlay(`<div class="panel center"><h2>Paused</h2>
-      <button class="big" id="mResume">Resume</button><button id="mRestart">Restart this scene</button><button id="mAuto">${settings.auto ? 'Auto-advance: on' : 'Auto-advance: off'}</button><button id="mSound">${settings.muted ? 'Sound: off' : 'Sound: on'}</button><button id="mTitle">Main menu</button></div>`);
+      <button class="big" id="mResume">Resume</button><button id="mRestart">Restart this scene</button><button id="mAuto">${settings.auto ? 'Auto-advance: on' : 'Auto-advance: off'}</button><button id="mSound">${settings.muted ? 'Sound: off' : 'Sound: on'}</button>${Voice.supported() ? `<button id="mVoice">${settings.voice ? 'Spoken dialogue: on' : 'Spoken dialogue: off'}</button>` : ''}<button id="mTitle">Main menu</button></div>`);
     $('mResume').onclick = closeOverlay;
     $('mRestart').onclick = () => { G = JSON.parse(save.cur.snap); startScene(save.cur.ep, save.cur.scene, { noIntro: true, quick: true }); };
     $('mAuto').onclick = () => { toggleAuto(); openMenu(); };
     $('mSound').onclick = () => { toggleSound(); openMenu(); };
+    if ($('mVoice')) $('mVoice').onclick = () => { toggleVoice(); openMenu(); };
     $('mTitle').onclick = showTitle;
   }
   function toggleAuto() {
     settings.auto = !settings.auto; persist(); updateHud();
     if (!settings.auto && waiter && typeof waiter.t === 'number' && !typing) { clearTimeout(waiter.t); E.dnext.style.opacity = 1; }
   }
-  function toggleSound() { settings.muted = !settings.muted; Sound.setMuted(settings.muted); persist(); updateHud(); }
+  function toggleSound() { settings.muted = !settings.muted; Sound.setMuted(settings.muted); applyVoice(); persist(); updateHud(); }
+  function toggleVoice() { settings.voice = !settings.voice; applyVoice(); persist(); updateHud(); }
   function showError(err) {
     overlay(`<div class="panel center"><h2>Something went wrong</h2><p>${esc(err && err.message || err)}</p><button class="big" id="eTitle">Main menu</button></div>`);
     $('eTitle').onclick = showTitle;
@@ -437,8 +449,8 @@ const has = id => !!G && G.clues.includes(id);
     overlay(`<div class="titlescreen"><div class="eyebrow">A murder mystery in episodes</div><h1>The Blackwood Files</h1><div class="sub">Season One</div>
       ${canContinue ? `<button class="big" id="tCont">Continue · Episode ${save.cur.ep + 1}</button>` : ''}
       <button class="${canContinue ? '' : 'big'}" id="tNew">${canContinue ? 'New game' : 'Begin'}</button>
-      <button id="tEps">Episodes</button><button id="tSound">${settings.muted ? 'Sound: off' : 'Sound: on'}</button>
-      <div class="tip">Headphones recommended. The story plays itself. Tap or press Space to move faster.</div></div>`);
+      <button id="tEps">Episodes</button><button id="tSound">${settings.muted ? 'Sound: off' : 'Sound: on'}</button>${Voice.supported() ? `<button id="tVoice">${settings.voice ? 'Spoken dialogue: on' : 'Spoken dialogue: off'}</button>` : ''}
+      <div class="tip">Best with headphones and the sound up. The story plays itself. Tap or press Space to move faster.</div></div>`);
     E.overlay.classList.add('title');
     const go1 = f => () => { Sound.init(); Sound.setMuted(settings.muted); E.overlay.classList.remove('title'); closeOverlay(); $('hud').classList.add('on'); f(); };
     if (canContinue) $('tCont').onclick = go1(() => { G = JSON.parse(save.cur.snap); startScene(save.cur.ep, save.cur.scene, { noIntro: save.cur.scene !== 0 }); });
@@ -449,6 +461,7 @@ const has = id => !!G && G.clues.includes(id);
     };
     $('tEps').onclick = () => { Sound.init(); E.overlay.classList.remove('title'); showEpisodes(); };
     $('tSound').onclick = () => { Sound.init(); toggleSound(); showTitle(); };
+    if ($('tVoice')) $('tVoice').onclick = () => { toggleVoice(); showTitle(); };
   }
   function showEpisodes() {
     overlay(`<div class="panel wide"><button class="x" id="eBack">×</button><h2>Episodes</h2>` + EPS.map((ep, i) => {
@@ -465,6 +478,9 @@ const has = id => !!G && G.clues.includes(id);
   $('bFile').onclick = () => { if (G) openFile(); };
   $('bAuto').onclick = toggleAuto;
   $('bSound').onclick = toggleSound;
+  $('bVoice').onclick = toggleVoice;
+  // browsers only allow sound after a gesture: unlock on the very first tap or key, so the title music starts too
+  ['pointerdown', 'keydown'].forEach(ev => document.addEventListener(ev, () => { Sound.init(); Sound.unlock(); Sound.setMuted(settings.muted); }, true));
   $('bMenu').onclick = openMenu;
   document.addEventListener('click', e => {
     if (e.target.closest('button, #overlay, #choices, #hud')) return;
@@ -481,7 +497,7 @@ const has = id => !!G && G.clues.includes(id);
   });
   document.addEventListener('visibilitychange', () => { if (document.hidden && !E.overlay.classList.contains('on') && G && save.cur) { /* keep running; audio is context-managed */ } });
 
-  Sound.setMuted(settings.muted);
+  Sound.setMuted(settings.muted); applyVoice();
   window.__game = { get G() { return G; }, startScene, advance, showTitle, save: () => save };
   setBg('exterior', true); setFx('snow');
   showTitle();
