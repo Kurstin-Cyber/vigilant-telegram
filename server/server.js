@@ -22,7 +22,7 @@ const MIME = {
   ".json": "application/json", ".mp3": "audio/mpeg", ".png": "image/png", ".svg": "image/svg+xml", ".ico": "image/x-icon",
 };
 // Only these files are served (never the server code, node_modules or the repo itself).
-const PUBLIC = /^\/(index\.html|join\.html|style\.css|join\.css|js\/[\w./-]+\.js|audio\/(voice|music)\/[\w-]+\.mp3)$/;
+const PUBLIC = /^\/(index\.html|join\.html|check\.html|style\.css|join\.css|js\/[\w./-]+\.js|audio\/(voice|music)\/[\w-]+\.mp3)$/;
 
 const rooms = new Map();
 
@@ -351,6 +351,7 @@ function createServer() {
       if (pathname === "/tv") return serveFile(res, "/index.html");
       if (pathname === "/tv/") { res.writeHead(302, { location: "/tv" }); return res.end(); }
       if (pathname === "/host") { res.writeHead(302, { location: "/?host=1" }); return res.end(); }
+      if (pathname === "/check") return serveFile(res, "/check.html");
       if (pathname === "/" || /^\/[A-Za-z]{4}$/.test(pathname) || pathname === "/join") return serveFile(res, "/join.html");
       if (PUBLIC.test(pathname)) return serveFile(res, pathname);
       return send(res, 404, { error: "Not found" });

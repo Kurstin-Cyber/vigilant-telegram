@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Connection check</title>
+<style>
+  body { font: 16px/1.5 system-ui, sans-serif; background: #14110f; color: #eee6d8; margin: 0; padding: 20px; max-width: 560px; }
+  h1 { font-size: 22px; margin: 0 0 4px; } .m { color: #a89f90; font-size: 14px; }
+  .r { border: 1px solid #3a342c; border-radius: 10px; padding: 10px 12px; margin: 10px 0; }
+  .ok { border-color: #3f7a4a; } .bad { border-color: #b04040; background: #2a1514; } .wait { opacity: .6; }
+  button { font: inherit; padding: 10px 16px; border-radius: 8px; border: 0; background: #c8a24a; color: #1a1408; }
+  pre { white-space: pre-wrap; word-break: break-all; font-size: 12px; color: #a89f90; }
+</style>
+</head>
+<body>
+<h1>Connection check</h1>
+<p class="m">Runs the same steps as hosting and joining a game, from this device. Takes about 15 seconds. Send a screenshot of the result.</p>
+<div id="out"></div>
+<p><button id="go">Run again</button></p>
+<pre id="info"></pre>
+<script>
+(() => {
+  const out = document.getElementById('out');
+  document.getElementById('info').textContent = location.href + '\n' + navigator.userAgent;
+  const row = t => { const d = document.createElement('div'); d.className = 'r wait'; d.textContent = '… ' + t; out.appendChild(d); return (ok, msg) => { d.className = 'r ' + (ok ? 'ok' : 'bad'); d.textContent = (ok ? '✓ ' : '✗ ') + t + (msg ? ': ' + msg : ''); return ok; }; };
+  const post = async (path, body, headers) => {
+    const r = await fetch(path, { method: 'POST', headers: Object.assign({ 'content-type': 'application/json' }, headers || {}), body: JSON.stringify(body || {}) });
+    const j = await r.json().catch(() => ({})); return { status: r.status, j };
+  };
+  const sse = (url, ms) => new Promise(res => {
+    const es = new EventSource(url); const t = setTimeout(() => { es.close(); res('no data after ' + ms / 1000 + 's'); }, ms);
+    es.onmessage = () => { clearTimeout(t); es.close(); res(null); };
+    es.onerror = () => { /* keeps retrying; the timer reports if nothing arrives */ };
+  });
+  async function run() {
+    out.innerHTML = '';
+    let done = row('The game server answers');
+    let r; try { r = await (await fetch('/health', { cache: 'no-store' })).json(); } catch (e) { return done(false, 'no answer. The site may be asleep or down. Wait a minute and run again.'); }
+    if (!done(!!r.ok, 'version ' + (r.shortCommit || '?') + ', saving rooms in ' + r.storage)) return;
+    done = row('A moderator can create a game');
+    let host; try { host = await post('/api/rooms', { name: 'Check', observer: true }); } catch (e) { return done(false, String(e)); }
+    if (!done(host.status === 200 && host.j.code, host.status === 200 ? 'code ' + host.j.code : 'HTTP ' + host.status + ' ' + JSON.stringify(host.j))) return;
+    done = row('A player can join with that code');
+    let pl; try { pl = await post('/api/rooms/' + host.j.code + '/join', { name: 'Check2' }); } catch (e) { return done(false, String(e)); }
+    if (!done(pl.status === 200 && pl.j.token, pl.status === 200 ? 'joined' : 'HTTP ' + pl.status + ' ' + JSON.stringify(pl.j))) return;
+    done = row('Live updates reach the phone (this is what keeps the game in sync)');
+    const e1 = await sse('/api/rooms/' + host.j.code + '/events?token=' + encodeURIComponent(pl.j.token), 8000);
+    if (!done(!e1, e1 || 'working')) return;
+    done = row('The big screen can connect with the code');
+    let tv; try { tv = await post('/api/rooms/' + host.j.code + '/tv-claim', {}); } catch (e) { return done(false, String(e)); }
+    if (!done(tv.status === 200 && tv.j.tvToken, tv.status === 200 ? 'connected' : 'HTTP ' + tv.status + ' ' + JSON.stringify(tv.j))) return;
+    done = row('Live updates reach the big screen');
+    const e2 = await sse('/api/rooms/' + host.j.code + '/tv?token=' + encodeURIComponent(tv.j.tvToken), 8000);
+    done(!e2, e2 || 'working');
+    const fin = document.createElement('div'); fin.className = 'r'; fin.textContent = 'Done. If every line has a tick, the server is fine and the problem is in how it is being opened.'; out.appendChild(fin);
+  }
+  document.getElementById('go').onclick = run; run();
+})();
+</script>
+</body>
+</html>
