@@ -1,4 +1,4 @@
-/* Scene runner for The Blackwood Files. */
+/* Scene runner for Mystery Night. */
 let G = null; // game state, global so story conditions can read it
 const has = id => !!G && G.clues.includes(id);
 
@@ -7,13 +7,13 @@ const has = id => !!G && G.clues.includes(id);
   const $ = id => document.getElementById(id);
   let CASE, NAMES, CLUES, SOLUTION, SUSPECTS, EPS;
   function useCase(id) {
-    CASE = CASES[id] || CASES.blackwood;
+    CASE = CASES[id] || CASES.silverblaze;
     NAMES = CASE.names; CLUES = CASE.clues; SOLUTION = CASE.solution; SUSPECTS = CASE.suspects; EPS = CASE.episodes;
     Object.entries(CASE.characters || {}).forEach(([cid, c]) => { if (c.look) Art.define(cid, c.look); });
   }
-  useCase('blackwood');
+  useCase('silverblaze');
   const IS_TV = location.pathname.replace(/\/+$/, '') === '/tv' || new URLSearchParams(location.search).has('tv');
-  const SAVE_KEY = 'mystery-night-v4', SET_KEY = 'blackwood-files-settings';
+  const SAVE_KEY = 'mystery-night-v4', SET_KEY = 'mystery-night-settings';
   const E = {
     stage: $('stage'), bg: [$('bgA'), $('bgB')], fx: $('fx'), chars: $('chars'), dialog: $('dialog'),
     dname: $('dname'), dtext: $('dtext'), dnext: $('dnext'), choices: $('choices'), card: $('card'),
@@ -21,15 +21,16 @@ const has = id => !!G && G.clues.includes(id);
   };
 
   /* ---------- persistence ---------- */
-  let save = { cur: null, cases: {}, lastCase: 'blackwood' };
+  let save = { cur: null, cases: {}, lastCase: 'silverblaze' };
   const sv = () => { save.cases = save.cases || {}; return (save.cases[CASE.id] = save.cases[CASE.id] || { epStart: {}, completed: 0 }); };
   let settings = { auto: true, muted: false, voice: true };
   try { const s = JSON.parse(localStorage.getItem(SAVE_KEY)); if (s) save = Object.assign(save, s); } catch (e) {}
+  try { if (save.cur && save.cur.snap && !CASES[JSON.parse(save.cur.snap).caseId]) save.cur = null; if (!CASES[save.lastCase]) save.lastCase = 'silverblaze'; } catch (e) { save.cur = null; }
   try { const s = JSON.parse(localStorage.getItem(SET_KEY)); if (s) settings = Object.assign(settings, s); } catch (e) {}
   const persist = () => { try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); localStorage.setItem(SET_KEY, JSON.stringify(settings)); } catch (e) {} };
   const newG = () => ({ ep: 0, scene: 0, clues: [], flags: {}, done: {}, marks: {}, composure: 3, finale: false, players: [], votes: {}, verdict: {}, cleared: {}, attempt: {}, caseId: CASE.id });
   const snap = () => JSON.stringify(G);
-  function loadSnap(s) { const g = JSON.parse(s); useCase(g.caseId || 'blackwood'); return g; }
+  function loadSnap(s) { const g = JSON.parse(s); useCase(g.caseId || 'silverblaze'); return g; }
 
   /* ---------- timers / flow ---------- */
   let timers = new Set(), pausedQ = [], paused = false, waiter = null, typing = null, frames = [], busy = false, flowToken = 0;
@@ -648,7 +649,7 @@ const has = id => !!G && G.clues.includes(id);
     $('hud').classList.remove('on');
     const canContinue = !!(save.cur && save.cur.snap);
     overlay(`<div class="titlescreen"><div class="eyebrow">Cinematic murder mysteries</div><h1>Mystery Night</h1><div class="sub">Choose a case</div>
-      ${canContinue ? `<button class="big" id="tCont">Continue · ${esc((CASES[JSON.parse(save.cur.snap).caseId || 'blackwood'] || CASES.blackwood).title)} · Episode ${save.cur.ep + 1}</button>` : ''}
+      ${canContinue ? `<button class="big" id="tCont">Continue · ${esc((CASES[JSON.parse(save.cur.snap).caseId || 'silverblaze'] || CASES.silverblaze).title)} · Episode ${save.cur.ep + 1}</button>` : ''}
       <button class="${canContinue ? '' : 'big'}" id="tNew">${canContinue ? 'New game' : 'Begin'}</button>
       <button id="tEps">Episodes</button><button id="tGroup" hidden>Host a group night (big screen + phones)</button><button id="tSound">${settings.muted ? 'Sound: off' : 'Sound: on'}</button>${Voice.supported() ? `<button id="tVoice">${settings.voice ? 'Spoken dialogue: on' : 'Spoken dialogue: off'}</button>` : ''}
       <div class="tip">Best with headphones and the sound up. The story plays itself. Tap or press Space to move faster.</div></div>`);
@@ -662,7 +663,7 @@ const has = id => !!G && G.clues.includes(id);
         go1(() => { G = newG(); startEpisode(0, players); })();
       }));
     };
-    $('tEps').onclick = () => { Sound.init(); E.overlay.classList.remove('title'); useCase(save.lastCase || 'blackwood'); showEpisodes(); };
+    $('tEps').onclick = () => { Sound.init(); E.overlay.classList.remove('title'); useCase(save.lastCase || 'silverblaze'); showEpisodes(); };
     $('tSound').onclick = () => { Sound.init(); toggleSound(); showTitle(); };
     if ($('tVoice')) $('tVoice').onclick = () => { toggleVoice(); showTitle(); };
     Room.available().then(ok => { const g = $('tGroup'); if (ok && g) { g.hidden = false; g.onclick = () => { location.href = 'tv'; }; } });
@@ -737,7 +738,7 @@ const has = id => !!G && G.clues.includes(id);
   function startGroupGame() {
     Sound.init(); Sound.setMuted(settings.muted);
     const players = Room.players().filter(p => !p.observer).map(p => ({ id: p.id, name: p.name }));
-    useCase(CASES[Room.caseId()] ? Room.caseId() : 'blackwood');
+    useCase(CASES[Room.caseId()] ? Room.caseId() : 'silverblaze');
     save.cur = null; sv().epStart = {}; sv().completed = 0;
     E.overlay.classList.remove('title'); closeOverlay(); $('hud').classList.add('on');
     G = newG(); tvPaused = false;
@@ -788,7 +789,7 @@ const has = id => !!G && G.clues.includes(id);
       tvWired = true; Room.on('players', syncPlayers); Room.on('cmd', onHostCommand);
       Room.on('case', id => { if ($('lStart') && CASES[id]) { useCase(id); renderTvLobby(); } });
     }
-    useCase(CASES[Room.caseId()] ? Room.caseId() : 'blackwood');
+    useCase(CASES[Room.caseId()] ? Room.caseId() : 'silverblaze');
     renderTvLobby();
   }
   function renderTvLobby() {

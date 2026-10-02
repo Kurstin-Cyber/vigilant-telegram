@@ -1,4 +1,4 @@
-/* The Blackwood Files, phone side. Join the room shown on the big screen, vote on your phone.
+/* Mystery Night, phone side. Join the room shown on the big screen, vote on your phone.
    The host (the first person in) also gets moderator controls. */
 (() => {
   'use strict';
@@ -31,7 +31,7 @@
     return (j && j.error) || fallback;
   };
   function noServer() {
-    app.innerHTML = `<div class="card join"><div class="eyebrow">The Blackwood Files</div><h1>Group night needs the game server</h1>
+    app.innerHTML = `<div class="card join"><div class="eyebrow">Mystery Night</div><h1>Group night needs the game server</h1>
       <p class="teaser">This page can't reach a game. Open the address shown on the big screen (it ends in <b>/tv</b>) or the link the moderator gave you. If you are the moderator, your game server has to be running first.</p></div>`;
   }
   function showJoin(error, mode) {
@@ -46,7 +46,7 @@
         <label>Your name<input id="hn" maxlength="14" autocomplete="nickname" placeholder="Moderator" value="${esc((saved && saved.name) || '')}" required></label>
         <label class="check"><input type="checkbox" id="ho"> I'll only moderate (I won't vote)</label>
         <button class="primary">Create the game</button><p class="error" role="alert">${esc(error || '')}</p></form>`;
-    app.innerHTML = `<div class="card join"><div class="eyebrow">A murder mystery for the whole table</div><h1>The Blackwood Files</h1>
+    app.innerHTML = `<div class="card join"><div class="eyebrow">A murder mystery for the whole table</div><h1>Mystery Night</h1>
       <div class="tabs"><button data-m="join" class="${mode === 'join' ? 'on' : ''}">Join a game</button><button data-m="host" class="${mode === 'host' ? 'on' : ''}">Host a game</button></div>
       ${mode === 'join' ? joinForm : hostForm}</div>`;
     app.querySelectorAll('[data-m]').forEach(b => b.onclick = () => showJoin('', b.dataset.m));
@@ -94,7 +94,7 @@
 
   /* ---------- screens ---------- */
   function renderShell() {
-    app.innerHTML = `<header class="top"><div><b>The Blackwood Files</b><small>Game ${esc(session.code)}</small></div><div id="me" class="me"></div></header>
+    app.innerHTML = `<header class="top"><div><b>Mystery Night</b><small>Game ${esc(session.code)}</small></div><div id="me" class="me"></div></header>
       <div id="banner" class="banner" hidden></div><section id="body"></section><section id="host"></section><section id="people"></section>`;
     shown = null;
   }

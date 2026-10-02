@@ -2,7 +2,7 @@
    questions and collects their answers. Same shape as Squad Bingo: Server-Sent Events down, small POSTs up.
    Without the server (for example on GitHub Pages) nothing here is used and the game plays on one screen. */
 const Room = (() => {
-  let caseId = 'blackwood', code = null, tvToken = null, es = null, players = [], hostId = null, lastCmd = 0, seq = 0, cur = null, connected = false;
+  let caseId = 'silverblaze', code = null, tvToken = null, es = null, players = [], hostId = null, lastCmd = 0, seq = 0, cur = null, connected = false;
   const listeners = {};
   const emit = (ev, ...a) => (listeners[ev] || []).forEach(f => f(...a));
   const on = (ev, fn) => { (listeners[ev] = listeners[ev] || []).push(fn); };

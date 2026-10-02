@@ -2,7 +2,7 @@
 // Usage: node tools/extract_lines.js > lines.json
 global.window = global;
 const fs = require('fs'), path = require('path');
-const files = ['cases.js', 'story.js', 'cases/kit.js', 'cases/silverblaze.js', 'cases/boscombe.js', 'cases/abbey.js'];
+const files = ['cases.js', 'cases/kit.js', 'cases/silverblaze.js', 'cases/boscombe.js', 'cases/abbey.js', 'cases/crooked.js'];
 eval(files.map(f => fs.readFileSync(path.join(__dirname, '../js', f), 'utf8')).join('\n') + ';global.CASES = CASES;');
 
 function fnv(str) { // keep in sync with Voice.hash in js/voice.js

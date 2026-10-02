@@ -1,7 +1,7 @@
 {
-  "name": "blackwood-files",
+  "name": "mystery-night",
   "version": "1.0.0",
-  "description": "The Blackwood Files: a cinematic murder-mystery night for a group. Open /tv on the big screen, everyone joins from their phone.",
+  "description": "Mystery Night: a cinematic murder-mystery night for a group. Open /tv on the big screen, everyone joins from their phone.",
   "private": true,
   "main": "server/server.js",
   "scripts": {

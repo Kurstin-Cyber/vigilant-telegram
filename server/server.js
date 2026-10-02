@@ -1,4 +1,4 @@
-// The Blackwood Files group-night server: plain Node, no dependencies. Same setup as Squad Bingo:
+// Mystery Night group-night server: plain Node, no dependencies. Same setup as Squad Bingo:
 // the TV and the phones get live updates over Server-Sent Events and send actions as small JSON POSTs.
 //
 //   /tv        the big screen. It runs the story and shows the QR code to join.
@@ -55,7 +55,7 @@ function snapshot(room) {
 }
 function restore(s) {
   const room = makeRoom(s.code);
-  Object.assign(room, { caseId: s.caseId || 'blackwood', tvToken: s.tvToken || null, tvWindow: s.tvWindow || 0, created: s.created, hostId: s.hostId, phase: s.phase, status: s.status, ask: s.ask, result: s.result, cmdSeq: s.cmdSeq || 0 });
+  Object.assign(room, { caseId: s.caseId || 'silverblaze', tvToken: s.tvToken || null, tvWindow: s.tvWindow || 0, created: s.created, hostId: s.hostId, phase: s.phase, status: s.status, ask: s.ask, result: s.result, cmdSeq: s.cmdSeq || 0 });
   for (const p of s.players) room.players.set(p.id, { ...p, streams: new Set() });
   return room;
 }
@@ -97,7 +97,7 @@ async function newCode() {
 
 function makeRoom(code) {
   return {
-    code, caseId: 'blackwood', tvToken: null, tvWindow: 0, created: Date.now(), touched: Date.now(),
+    code, caseId: 'silverblaze', tvToken: null, tvWindow: 0, created: Date.now(), touched: Date.now(),
     players: new Map(), hostId: null, phase: "lobby",
     status: { text: "", episode: 0, paused: false, auto: true },
     ask: null, result: null, cmdSeq: 0, cmds: [], tvs: new Set(),
@@ -380,7 +380,7 @@ if (require.main === module) {
   const port = Number(process.env.PORT) || 3000;
   setInterval(sweep, 10 * 60 * 1000).unref();
   createServer().listen(port, process.env.HOST || "0.0.0.0", () => {
-    console.log(`The Blackwood Files running on http://localhost:${port}  (big screen: /tv)`);
+    console.log(`Mystery Night running on http://localhost:${port}  (big screen: /tv)`);
   });
 }
 

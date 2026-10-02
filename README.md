@@ -8,9 +8,9 @@ Pick a case, watch it unfold like a short film, and vote on whodunit.
 
 | Case | Length | Source |
 | --- | --- | --- |
-| **The Blackwood Files** | 4 episodes, about 75 min | Original mystery. A blizzard seals a manor house. |
 | **Silver Blaze** | 2 episodes, about 40 min | After Arthur Conan Doyle (1892). A missing racehorse and a dead trainer. |
 | **The Boscombe Valley Mystery** | 2 episodes, about 40 min | After Arthur Conan Doyle (1891). A farmer dead beside a pool, his son accused. |
+| **The Crooked Man** | 2 episodes, about 40 min | After Arthur Conan Doyle (1893). A colonel dead in a locked room, and a name that makes no sense. |
 | **The Abbey Grange** | 2 episodes, about 40 min | After Arthur Conan Doyle (1904). A baronet dead and a burglary that does not add up. The group decides what justice should be. |
 
 The Doyle stories are in the public domain; these are fresh retellings written for this game, not copies of the text. The moderator picks the case in the lobby (on the big screen or on their phone). Each case is one file in `js/cases/`; `js/cases/kit.js` holds the shared cast and helpers if you want to add another.
@@ -81,7 +81,7 @@ To re-render the score: `python3 tools/compose_score.py audio/music` (needs `flu
 
 ## Credits
 
-- Stories: Arthur Conan Doyle (public domain), retold. Blackwood is original.
+- Stories: Arthur Conan Doyle (public domain), retold.
 - Voices: [Kokoro-82M](https://huggingface.co/hexgrad/Kokoro-82M) (Apache-2.0), run with sherpa-onnx.
 - Score: original compositions rendered with the FluidR3 GM soundfont.
 - QR codes: [qrcode-generator](https://github.com/kazuhikoarase/qrcode-generator) (MIT), in `js/vendor/`.

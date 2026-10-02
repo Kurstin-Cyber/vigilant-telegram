@@ -35,6 +35,10 @@ const KIT = (() => {
     lady: { name: 'Lady Brackenstall', voice: [2, 0.95, 1.04], look: { skin: '#e8c8a8', col: '#c08ad0', suit: '#4a2a5a', hair: { style: 'bun', color: '#b88a3a' }, collar: 'lace', ry: 73, age: 0.1 } },
     theresa: { name: 'Theresa Wright', voice: [8, 1.0, 0.96], look: { skin: '#dcb898', col: '#c0a088', suit: '#2a2a2a', shirt: '#f0ece0', accent: '#d0c8b8', hair: { style: 'bun', color: '#4a3a2a' }, hat: 'bonnet', hatColor: '#f2eee4', collar: 'apron', age: 0.3 } },
     croker: { name: 'Captain Croker', voice: [10, 0.97, 1.0], look: { skin: '#c8946a', col: '#4a7aba', suit: '#1a2a4a', accent: '#c8a24a', hair: { style: 'short', color: '#7a5a2a' }, beard: 'full', facial: '#8a6a30', hat: 'sailor', hatColor: '#1a2030', collar: 'open', ry: 77, age: 0.2, build: 'broad' } },
+    nancy: { name: 'Nancy Barclay', voice: [4, 1.0, 1.0], look: { skin: '#e6c6a6', col: '#c08090', suit: '#5a3a4a', hair: { style: 'bun', color: '#4a3020' }, collar: 'lace', ry: 73, age: 0.2 } },
+    murphy: { name: 'Major Murphy', voice: [6, 0.95, 0.96], look: { skin: '#d8a888', col: '#c0604d', suit: '#6a2a22', shirt: '#efe8d8', accent: '#c8a24a', hair: { style: 'short', color: '#8a8a8a' }, beard: 'mustache', facial: '#9a9a9a', collar: 'high', age: 0.5, build: 'broad' } },
+    wood: { name: 'Henry Wood', voice: [9, 0.92, 0.94], look: { skin: '#c8946a', col: '#7a6a4a', suit: '#4a3a2a', hair: { style: 'short', color: '#4a3a2a' }, beard: 'full', facial: '#5a4a3a', hat: 'cap', hatColor: '#2a2a22', collar: 'scarf', ry: 70, age: 0.6, build: 'slim' } },
+    morrison: { name: 'Miss Morrison', voice: [1, 1.05, 1.0], look: { skin: '#e8c8a8', col: '#a0c0a0', suit: '#3a5a4a', hair: { style: 'long', color: '#a07a4a' }, collar: 'lace', ry: 72, age: 0 } },
     eustace: { name: 'Sir Eustace', voice: [9, 0.9, 0.9], look: { skin: '#d08a6a', col: '#b06a5a', suit: '#4a2a2a', hair: { style: 'short', color: '#4a3a2a' }, beard: 'stubble', collar: 'cravat', accent: '#6a2a2a', ry: 78, age: 0.4, build: 'broad' } }
   };
   const opt = id => ({ id, label: CAST[id].name, portrait: id });
