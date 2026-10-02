@@ -70,11 +70,12 @@ def main():
         if i % shards != shard: continue
         path = f"{out_dir}/{l['hash']}.mp3"
         if os.path.exists(path): continue
-        sid, speed = CAST.get(l['who'], CAST['nar'])
+        sid, speed, pitch = (l.get('voice') or [*CAST.get(l['who'], CAST['nar']), 1.0])[:3]
         speed *= EMOTION_SPEED.get(l.get('e', 'n'), 1.0) if l['who'] not in ('nar', 'you') else 1.0
         a = tts.generate(spoken(l['text']), sid=sid, speed=speed)
         x = trim_level(np.array(a.samples, dtype=np.float32), a.sample_rate)
-        p = subprocess.run(['ffmpeg', '-v', 'error', '-y', '-f', 'f32le', '-ar', str(a.sample_rate), '-ac', '1', '-i', '-', '-c:a', 'libmp3lame', '-b:a', '56k', '-ar', '24000', path], input=x.tobytes())
+        af = ['-af', f'asetrate={int(a.sample_rate * pitch)},aresample={a.sample_rate},atempo={1 / pitch:.4f}'] if abs(pitch - 1) > 0.005 else []
+        p = subprocess.run(['ffmpeg', '-v', 'error', '-y', '-f', 'f32le', '-ar', str(a.sample_rate), '-ac', '1', '-i', '-', *af, '-c:a', 'libmp3lame', '-b:a', '56k', '-ar', '24000', path], input=x.tobytes())
         print(f"[{shard}] {i + 1}/{len(lines)} {l['who']:10s} {len(x) / a.sample_rate:5.1f}s {l['text'][:50]}", flush=True)
 
 if __name__ == '__main__':

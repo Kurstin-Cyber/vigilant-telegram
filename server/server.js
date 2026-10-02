@@ -16,7 +16,7 @@ const ROOT = path.join(__dirname, "..");
 const ROOM_TTL_MS = 12 * 60 * 60 * 1000;
 const CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ"; // no I or O, to avoid confusion with 1 and 0
 const MAX_PLAYERS = 40, MAX_ROOMS = 300, MAX_NAME = 14;
-const COMMANDS = new Set(["start", "pause", "resume", "skip", "auto", "closeAsk", "end", "kick", "makeHost", "openTv"]);
+const COMMANDS = new Set(["start", "pause", "resume", "skip", "auto", "closeAsk", "end", "kick", "makeHost", "openTv", "case"]);
 const MIME = {
   ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8",
   ".json": "application/json", ".mp3": "audio/mpeg", ".png": "image/png", ".svg": "image/svg+xml", ".ico": "image/x-icon",
@@ -48,14 +48,14 @@ function useStore(s) { store = s; }
 
 function snapshot(room) {
   return {
-    code: room.code, tvToken: room.tvToken, tvWindow: room.tvWindow, created: room.created, hostId: room.hostId, phase: room.phase, status: room.status,
+    code: room.code, caseId: room.caseId, tvToken: room.tvToken, tvWindow: room.tvWindow, created: room.created, hostId: room.hostId, phase: room.phase, status: room.status,
     ask: room.ask, result: room.result, cmdSeq: room.cmdSeq,
     players: [...room.players.values()].map((p) => ({ id: p.id, token: p.token, name: p.name, observer: !!p.observer })),
   };
 }
 function restore(s) {
   const room = makeRoom(s.code);
-  Object.assign(room, { tvToken: s.tvToken || null, tvWindow: s.tvWindow || 0, created: s.created, hostId: s.hostId, phase: s.phase, status: s.status, ask: s.ask, result: s.result, cmdSeq: s.cmdSeq || 0 });
+  Object.assign(room, { caseId: s.caseId || 'blackwood', tvToken: s.tvToken || null, tvWindow: s.tvWindow || 0, created: s.created, hostId: s.hostId, phase: s.phase, status: s.status, ask: s.ask, result: s.result, cmdSeq: s.cmdSeq || 0 });
   for (const p of s.players) room.players.set(p.id, { ...p, streams: new Set() });
   return room;
 }
@@ -97,7 +97,7 @@ async function newCode() {
 
 function makeRoom(code) {
   return {
-    code, tvToken: null, tvWindow: 0, created: Date.now(), touched: Date.now(),
+    code, caseId: 'blackwood', tvToken: null, tvWindow: 0, created: Date.now(), touched: Date.now(),
     players: new Map(), hostId: null, phase: "lobby",
     status: { text: "", episode: 0, paused: false, auto: true },
     ask: null, result: null, cmdSeq: 0, cmds: [], tvs: new Set(),
@@ -107,7 +107,7 @@ function makeRoom(code) {
 // ---- views ----
 const playersView = (room) => [...room.players.values()].map((p) => ({ id: p.id, name: p.name, online: isOnline(p), host: p.id === room.hostId, observer: !!p.observer }));
 const tvView = (room) => ({
-  code: room.code, phase: room.phase, status: room.status, hostId: room.hostId, players: playersView(room),
+  code: room.code, caseId: room.caseId, phase: room.phase, status: room.status, hostId: room.hostId, players: playersView(room),
   ask: room.ask ? { id: room.ask.id, answers: room.ask.answers } : null, cmds: room.cmds.slice(-30),
 });
 function phoneView(room, p) {
@@ -117,7 +117,7 @@ function phoneView(room, p) {
     answered: Object.keys(room.ask.answers).length, total: online,
   };
   return {
-    code: room.code, you: { id: p.id, name: p.name, host: p.id === room.hostId, observer: !!p.observer }, players: playersView(room),
+    code: room.code, caseId: room.caseId, you: { id: p.id, name: p.name, host: p.id === room.hostId, observer: !!p.observer }, players: playersView(room),
     phase: room.phase, status: room.status, ask, result: room.result, tvOnline: room.tvs.size > 0, needsTv: !room.tvToken, tvWindow: room.tvWindow > Date.now(), now: Date.now(),
   };
 }
@@ -241,6 +241,9 @@ const PLAYER_ACTIONS = {
       for (const res of t.streams) res.end();
       room.players.delete(t.id);
       if (room.ask) delete room.ask.answers[t.id];
+    } else if (cmd === "case") {
+      if (!/^[a-z]{2,20}$/.test(String(body.arg || ""))) throw new HttpError(400, "Unknown case.");
+      room.caseId = body.arg;
     } else if (cmd === "openTv") {
       room.tvWindow = Date.now() + 10 * 60_000; // for ten minutes a big screen can connect by typing the code
     } else if (cmd === "makeHost") {
@@ -254,6 +257,7 @@ const PLAYER_ACTIONS = {
 };
 // What the TV can do (it holds the room's TV token).
 const TV_ACTIONS = {
+  case: (room, body) => { if (/^[a-z]{2,20}$/.test(String(body.id || ""))) room.caseId = body.id; },
   status: (room, body) => {
     room.phase = ["lobby", "playing", "ended"].includes(body.phase) ? body.phase : room.phase;
     room.status = { text: clean(body.text, 120), episode: Number(body.episode) | 0, paused: !!body.paused, auto: body.auto !== false };

@@ -172,6 +172,74 @@ const Art = (() => {
         <g fill="#150a06"><rect x="330" y="560" width="70" height="200" rx="14"/><rect x="1200" y="560" width="70" height="200" rx="14"/><rect x="760" y="520" width="80" height="110" rx="14"/></g>`);
     },
 
+
+    train: () => {
+      const [g, gd] = grad('#2b3a52', '#c98a5a'), r = seeded(61);
+      let hills = '', lines = '';
+      for (let i = 0; i < 14; i++) lines += `<rect x="${i * 120 + (i % 3) * 7}" y="${300 + r() * 120}" width="${60 + r() * 60}" height="3" fill="#0a0e18" opacity=".35"/>`;
+      return svg(`${room('#3a2418', '#1a0e08', '#2a1810', '#0f0805', 700)}
+        <rect x="480" y="120" width="640" height="420" fill="#0a0e18"/><defs>${gd}</defs>
+        <rect x="490" y="130" width="620" height="400" fill="url(#${g})"/>
+        <path d="M490 430 Q640 330 780 400 T1110 380 V530 H490 Z" fill="#1c2434"/><path d="M490 470 Q700 410 900 460 T1110 450 V530 H490 Z" fill="#10161f"/>
+        <g clip-path="inset(130px 490px 370px 490px)">${lines}</g>
+        <rect x="480" y="120" width="640" height="420" fill="none" stroke="#5a3a1c" stroke-width="22"/><rect x="788" y="130" width="24" height="400" fill="#5a3a1c"/>
+        <path d="M60 560 h340 v160 q0 40 -40 40 h-260 q-40 0 -40 -40z" fill="#6e1f24"/><path d="M1200 560 h340 v160 q0 40 -40 40 h-260 q-40 0 -40 -40z" fill="#6e1f24"/>
+        <rect x="40" y="130" width="360" height="22" fill="#c8a24a" opacity=".6"/><rect x="1200" y="130" width="360" height="22" fill="#c8a24a" opacity=".6"/>
+        ${glow(800, 80, 330, '#ffc866', 0.5, 'flicker')}<circle cx="800" cy="70" r="20" fill="#ffd98a"/>`);
+    },
+    stable: () => {
+      let stalls = '';
+      for (let i = 0; i < 4; i++) {
+        const x = 70 + i * 380;
+        stalls += `<rect x="${x}" y="150" width="340" height="480" fill="#2a1b10"/><rect x="${x + 20}" y="170" width="300" height="440" fill="#150d07"/>
+          <path d="M${x + 150} 520 q-10 -140 40 -200 q10 -50 50 -50 l30 40 q-30 20 -20 60 q20 100 -10 150z" fill="${i % 2 ? '#3b2616' : '#1d1209'}" opacity=".95"/>
+          <rect x="${x}" y="150" width="340" height="14" fill="#4a3320"/><path d="M${x + 20} 600 q150 -30 300 0 v20 h-300z" fill="#9a8030" opacity=".6"/>`;
+      }
+      return svg(`${room('#2c1e12', '#140c06', '#3a2a18', '#150d06', 650)}${stalls}
+        ${glow(800, 220, 380, '#ffb14a', 0.45, 'flicker')}<rect x="780" y="120" width="40" height="60" fill="#caa14a" opacity=".7"/>
+        <path d="M0 700 H1600" stroke="#000" opacity=".3" stroke-width="3"/>`);
+    },
+    moor: () => {
+      const [g, gd] = grad('#2a3140', '#9aa0a8'), r = seeded(77);
+      let gorse = '', mist = '';
+      for (let i = 0; i < 40; i++) gorse += `<ellipse cx="${r() * 1600}" cy="${560 + r() * 280}" rx="${20 + r() * 40}" ry="${8 + r() * 14}" fill="${r() > .5 ? '#2c3a22' : '#4a4a1c'}" opacity=".8"/>`;
+      for (let i = 0; i < 6; i++) mist += `<ellipse cx="${r() * 1600}" cy="${480 + r() * 260}" rx="${300 + r() * 300}" ry="${30 + r() * 30}" fill="#c9ced4" opacity=".14"/>`;
+      return svg(`<defs>${gd}</defs><rect width="1600" height="900" fill="url(#${g})"/>
+        <path d="M0 520 Q250 420 520 500 T1040 470 T1600 500 V900 H0 Z" fill="#323c34"/><path d="M0 600 Q300 540 640 590 T1300 570 T1600 600 V900 H0 Z" fill="#26301f"/>
+        <path d="M0 720 Q400 670 800 710 T1600 700 V900 H0 Z" fill="#1c2417"/>${gorse}
+        <g fill="#15181b"><rect x="1180" y="420" width="46" height="120" rx="8"/><rect x="1250" y="440" width="40" height="100" rx="8"/><rect x="1110" y="450" width="36" height="90" rx="8"/></g>
+        ${mist}<path d="M700 900 Q780 760 860 640 T1000 520" stroke="#6a5a40" stroke-width="26" fill="none" opacity=".5"/>`);
+    },
+    racecourse: () => {
+      const [g, gd] = grad('#7fb2e0', '#d8ecf8'), r = seeded(88);
+      let flags = '', crowd = '';
+      for (let i = 0; i < 16; i++) flags += `<path d="M${100 + i * 95} 250 l22 10 -22 10z" fill="${['#c83c3c', '#e8d24a', '#3c6ac8'][i % 3]}"/><path d="M${100 + i * 95} 250 v-10" stroke="#fff" stroke-width="3"/>`;
+      for (let i = 0; i < 90; i++) crowd += `<circle cx="${60 + r() * 1480}" cy="${420 + r() * 70}" r="${6 + r() * 4}" fill="${['#3a2a22', '#6a4a3a', '#2a3a4a', '#7a2a2a'][Math.floor(r() * 4)]}"/>`;
+      return svg(`<defs>${gd}</defs><rect width="1600" height="900" fill="url(#${g})"/>
+        <rect x="200" y="300" width="1200" height="200" fill="#a9916a"/><path d="M200 300 L300 220 H1300 L1400 300Z" fill="#7a5a3a"/>${flags}${crowd}
+        <rect y="520" width="1600" height="380" fill="#5f9a3a"/><path d="M0 640 H1600" stroke="#fff" stroke-width="8"/><path d="M0 760 H1600" stroke="#fff" stroke-width="8"/>
+        ${[0, 1, 2, 3, 4, 5, 6, 7].map(i => `<rect x="${60 + i * 200}" y="630" width="8" height="140" fill="#fff"/>`).join('')}
+        ${glow(1300, 120, 260, '#fff4c0', 0.5)}`);
+    },
+    pool: () => {
+      const [g, gd] = grad('#1b2a22', '#4a5a42'), r = seeded(99);
+      let reeds = '';
+      for (let i = 0; i < 40; i++) reeds += `<path d="M${200 + r() * 1200} 700 q${r() * 20 - 10} -${40 + r() * 60} ${r() * 20 - 10} -${80 + r() * 60}" stroke="#2c3a22" stroke-width="3" fill="none"/>`;
+      return svg(`<defs>${gd}</defs><rect width="1600" height="900" fill="url(#${g})"/>
+        ${tree(120, 700, 2.2)}${tree(1480, 720, 2.4)}${tree(380, 640, 1.2)}${tree(1180, 650, 1.3)}
+        ${glow(800, 180, 420, '#d8e8b8', 0.28)}
+        <ellipse cx="800" cy="700" rx="560" ry="120" fill="#1a2c34"/><ellipse cx="800" cy="700" rx="520" ry="96" fill="#2a4450" opacity=".8"/>
+        <ellipse cx="760" cy="690" rx="200" ry="30" fill="#8fb0c0" opacity=".2"/>${reeds}
+        <path d="M0 780 Q400 740 800 770 T1600 760 V900 H0Z" fill="#14200f"/>`);
+    },
+    cell: () => {
+      const r = seeded(55);
+      let bricks = '';
+      for (let y = 0; y < 640; y += 44) for (let x = (y / 44 % 2) * 45 - 45; x < 1600; x += 90) bricks += `<rect x="${x}" y="${y}" width="86" height="40" fill="hsl(30 6% ${15 + r() * 8}%)"/>`;
+      return svg(`<rect width="1600" height="900" fill="#0c0a09"/>${bricks}<rect y="640" width="1600" height="260" fill="#0a0908"/>
+        <rect x="660" y="140" width="280" height="260" fill="#8fa0b8" opacity=".35"/><g stroke="#0a0a0a" stroke-width="12"><path d="M730 140 V400"/><path d="M800 140 V400"/><path d="M870 140 V400"/></g>
+        ${glow(800, 270, 520, '#b8c8e0', 0.35)}<rect x="1180" y="560" width="300" height="60" fill="#3a2e24"/><rect x="1180" y="620" width="300" height="20" fill="#241a12"/>`);
+    },
     drawing: () => {
       return svg(`${room('#2a2b3a', '#14151f', '#2b1a14', '#100806')}
         ${window_(180, 120, 260, 380, '#2a3a58')}${curtains(180, 120, 260, 380, '#3a2a4a')}
@@ -249,9 +317,75 @@ const Art = (() => {
     s: 'M126 246 q24 22 48 0',
     sh: 'M140 246 q10 22 20 0 q-10 -10 -20 0'
   };
+
+  /* A character described by a few traits, drawn in the same style as the hand-made portraits. */
+  const LOOKS = {};
+  function define(id, look) { LOOKS[id] = look; PORTRAITS[id] = { skin: look.skin, suit: look.suit, col: look.col }; }
+  function genericPortrait(P, e) {
+    const brow = BROWS[e] || BROWS.n, mouth = MOUTH[e] || MOUTH.n;
+    const ry = P.ry || 76, hair = P.hair || { style: 'short', color: '#4a3a2a' }, hc = hair.color;
+    const bodyPath = { normal: 'M10 440 C10 345 70 305 150 305 C230 305 290 345 290 440 Z', broad: 'M-14 440 C-6 340 70 300 150 300 C230 300 306 340 314 440 Z', slim: 'M44 440 C44 352 92 308 150 308 C208 308 256 352 256 440 Z' }[P.build || 'normal'];
+    const shirt = P.shirt || '#e8e4da', accent = P.accent || '#8f2a2a';
+    let body = `<path d="${bodyPath}" fill="${P.suit}"/>`;
+    const collar = P.collar || 'tie';
+    if (collar === 'tie') body += `<path d="M118 305 L150 395 L182 305 Z" fill="${shirt}"/><path d="M150 322 l-9 60 h18 z" fill="${accent}"/><path d="M64 330 L112 440 H20 Z M236 330 L188 440 H280 Z" fill="#000" opacity=".28"/>`;
+    else if (collar === 'bowtie') body += `<path d="M116 305 L150 392 L184 305 Z" fill="${shirt}"/><path d="M132 316 l18 10 -18 10z M168 316 l-18 10 18 10z" fill="${accent}"/><path d="M64 330 L112 440 H20 Z M236 330 L188 440 H280 Z" fill="#000" opacity=".28"/>`;
+    else if (collar === 'cravat') body += `<path d="M112 305 L150 388 L188 305 Z" fill="${shirt}"/><ellipse cx="150" cy="332" rx="22" ry="16" fill="${accent}"/><path d="M64 330 L112 440 H20 Z M236 330 L188 440 H280 Z" fill="#000" opacity=".28"/>`;
+    else if (collar === 'high') body += `<path d="M112 305 L150 380 L188 305 Z" fill="${shirt}"/><rect x="124" y="282" width="52" height="30" rx="6" fill="${shirt}"/><path d="M150 330 l-6 70 h12 z" fill="#2a2a2a"/>`;
+    else if (collar === 'open') body += `<path d="M112 305 L150 372 L188 305 Z" fill="${P.skin}"/><path d="M104 305 L150 372 L196 305 L150 330Z" fill="${shirt}"/>`;
+    else if (collar === 'apron') body += `<path d="M92 440 V345 q58 -34 116 0 V440 Z" fill="${shirt}"/><path d="M118 440 V372 h64 V440" fill="#d6cfbd"/>`;
+    else if (collar === 'scarf') body += `<path d="M104 305 q46 56 92 0 l14 50 q-60 36 -120 0z" fill="${accent}"/><path d="M150 330 l-14 80 h28z" fill="${accent}" opacity=".85"/>`;
+    else if (collar === 'lace') body += `<path d="M104 305 q46 46 92 0 v-26 h-92z" fill="#1e1328" opacity=".0"/><path d="M104 310 q46 40 92 0" fill="none" stroke="#f1ece0" stroke-width="12" stroke-dasharray="2 10" stroke-linecap="round"/><path d="M118 296 h64 v22 h-64z" fill="#eadfd0" opacity=".85"/>`;
+    const neck = `<rect x="128" y="262" width="44" height="50" fill="${P.skin}" opacity=".9"/><rect x="128" y="262" width="44" height="22" fill="#000" opacity=".18"/>`;
+    let behind = '', front = '';
+    const st = hair.style;
+    if (st === 'long') behind = `<path d="M82 220 q-16 -112 68 -116 q84 4 68 116 l14 120 q-60 20 -72 -10 q-12 30 -72 10z" fill="${hc}"/>`;
+    else if (st === 'bob') behind = `<path d="M82 250 q-18 -120 68 -126 q86 6 68 126 q-26 24 -68 20 q-42 4 -68 -20z" fill="${hc}"/>`;
+    else if (st === 'bun') behind = `<circle cx="150" cy="110" r="34" fill="${hc}"/><path d="M84 200 q-10 -86 66 -90 q76 4 66 90 q-12 -44 -66 -46 q-54 2 -66 46z" fill="${hc}"/>`;
+    else if (st === 'curly') behind = `<g fill="${hc}">${[[96, 150], [124, 124], [156, 118], [188, 126], [212, 152], [90, 188], [214, 190]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="26"/>`).join('')}</g>`;
+    else if (st === 'bald') behind = '';
+    else behind = `<path d="M88 192 q-8 -68 62 -74 q70 6 62 74 q-10 -44 -62 -48 q-52 4 -62 48z" fill="${hc}"/>`;
+    if (st === 'bald' || (P.hat && P.hat !== 'none' && false)) front += `<path d="M92 172 q-6 30 2 52 M208 172 q6 30 -2 52" stroke="${hc}" stroke-width="12" fill="none" stroke-linecap="round"/>`;
+    if (st === 'sidepart') front += `<path d="M96 160 q40 -40 110 -6 q-40 -8 -70 8z" fill="${hc}"/>`;
+    if (st === 'long' || st === 'bob') front += `<path d="M90 170 q-6 40 6 70 M210 170 q6 40 -6 70" stroke="${hc}" stroke-width="16" fill="none" stroke-linecap="round"/><path d="M96 150 q54 -34 108 0 q-54 -12 -108 0z" fill="${hc}"/>`;
+    const fh = P.facial || '#888', beard = P.beard || 'none';
+    let beardSvg = '', stache = '';
+    if (beard === 'full') { beardSvg = `<path d="M98 226 q4 70 52 74 q48 -4 52 -74 q-14 28 -52 28 q-38 0 -52 -28z" fill="${fh}"/>`; stache = `<path d="M118 238 q32 -14 64 0 q-32 18 -64 0z" fill="${fh}"/>`; }
+    else if (beard === 'goatee') { beardSvg = `<path d="M130 262 q20 34 40 0 q-20 10 -40 0z" fill="${fh}"/>`; stache = `<path d="M120 238 q30 -12 60 0 q-30 16 -60 0z" fill="${fh}"/>`; }
+    else if (beard === 'mustache') stache = `<path d="M114 238 q36 -16 72 0 q-36 20 -72 0z" fill="${fh}"/>`;
+    else if (beard === 'mutton') { beardSvg = `<path d="M92 190 q-8 46 14 64 q-4 -34 8 -54z M208 190 q8 46 -14 64 q4 -34 -8 -54z" fill="${fh}"/>`; stache = `<path d="M118 238 q32 -12 64 0 q-32 16 -64 0z" fill="${fh}"/>`; }
+    else if (beard === 'stubble') beardSvg = `<path d="M104 232 q46 64 92 0 q-12 40 -46 40 q-34 0 -46 -40z" fill="#000" opacity=".16"/>`;
+    let hat = '';
+    const hatC = P.hatColor || '#2a2a2a', hatSt = P.hat || 'none';
+    if (hatSt === 'tophat') hat = `<rect x="104" y="62" width="92" height="104" rx="6" fill="${hatC}"/><ellipse cx="150" cy="166" rx="84" ry="14" fill="${hatC}"/><rect x="104" y="140" width="92" height="14" fill="${accent}" opacity=".8"/>`;
+    else if (hatSt === 'bowler') hat = `<path d="M94 160 q0 -66 56 -66 q56 0 56 66z" fill="${hatC}"/><ellipse cx="150" cy="162" rx="76" ry="12" fill="${hatC}"/><rect x="96" y="142" width="108" height="9" fill="${accent}" opacity=".7"/>`;
+    else if (hatSt === 'deerstalker') hat = `<path d="M88 168 q-4 -76 62 -78 q66 2 62 78 q-20 -16 -62 -16 q-42 0 -62 16z" fill="${hatC}"/><path d="M92 160 q-28 18 -22 50 q18 -10 34 -26z M208 160 q28 18 22 50 q-18 -10 -34 -26z" fill="${hatC}" opacity=".9"/><path d="M104 122 q46 -22 92 0" stroke="#000" stroke-opacity=".25" stroke-width="3" fill="none"/><path d="M150 96 l-26 -22 52 0z" fill="${hatC}"/><path d="M96 168 h108" stroke="#000" stroke-opacity=".3" stroke-width="3"/>`;
+    else if (hatSt === 'cap') hat = `<path d="M92 166 q2 -62 58 -62 q56 0 58 62z" fill="${hatC}"/><path d="M92 166 q58 14 130 -4 q-6 14 -60 20 q-50 2 -70 -16z" fill="${hatC}" opacity=".95"/>`;
+    else if (hatSt === 'jockey') hat = `<path d="M96 164 q0 -64 54 -64 q54 0 54 64z" fill="${accent}"/><path d="M96 164 q60 12 124 -2 q-6 12 -60 16 q-46 0 -64 -14z" fill="${hatC}"/><path d="M150 100 v64" stroke="#fff" stroke-width="10" opacity=".8"/>`;
+    else if (hatSt === 'bonnet') hat = `<path d="M82 200 q-18 -110 68 -112 q86 2 68 112 q-20 -60 -68 -62 q-48 2 -68 62z" fill="${hatC}"/><path d="M100 150 q50 -34 100 0" stroke="${accent}" stroke-width="10" fill="none"/>`;
+    else if (hatSt === 'sailor') hat = `<path d="M96 164 q0 -50 54 -50 q54 0 54 50z" fill="${hatC}"/><rect x="96" y="150" width="108" height="14" fill="#10131a"/><path d="M150 114 l-8 -14 16 0z" fill="${accent}"/>`;
+    else if (hatSt === 'cloche') hat = `<path d="M92 190 q-6 -80 58 -84 q64 4 58 84 q-16 -30 -58 -30 q-42 0 -58 30z" fill="${hatC}"/><path d="M96 168 q54 -20 108 0" stroke="${accent}" stroke-width="8" fill="none"/>`;
+    let glasses = '';
+    if (P.glasses) glasses = `<circle cx="123" cy="200" r="21" fill="none" stroke="#c8a24a" stroke-width="3.5"/><circle cx="177" cy="200" r="21" fill="none" stroke="#c8a24a" stroke-width="3.5"/><path d="M144 200 h12" stroke="#c8a24a" stroke-width="3.5"/>`;
+    const age = P.age || 0;
+    const wrinkles = age > 0.4 ? `<path d="M96 196 q6 4 12 0 M192 196 q6 4 12 0 M110 156 q40 -8 80 0 M124 262 q26 8 52 0" stroke="#000" stroke-opacity="${(0.12 + age * 0.12).toFixed(2)}" stroke-width="3" fill="none" stroke-linecap="round"/>` : '';
+    return `<svg viewBox="0 0 300 440" xmlns="http://www.w3.org/2000/svg">
+      ${behind}${body}${neck}
+      <ellipse cx="150" cy="200" rx="62" ry="${ry}" fill="${P.skin}"/><ellipse cx="150" cy="200" rx="62" ry="${ry}" fill="url(#shade)" opacity=".5"/>
+      <ellipse cx="88" cy="204" rx="9" ry="16" fill="${P.skin}"/><ellipse cx="212" cy="204" rx="9" ry="16" fill="${P.skin}"/>
+      ${front}
+      <g fill="#1a1210"><ellipse cx="123" cy="200" rx="6" ry="${e === 'sh' ? 9 : 6.5}"/><ellipse cx="177" cy="200" rx="6" ry="${e === 'sh' ? 9 : 6.5}"/></g>
+      <g fill="#fff" opacity=".8"><circle cx="125" cy="198" r="2"/><circle cx="179" cy="198" r="2"/></g>
+      <g stroke="${P.brows || '#1a1210'}" stroke-width="4.5" fill="none" stroke-linecap="round" opacity=".85"><path d="${brow[0]}"/><path d="${brow[1]}"/></g>
+      <path d="M150 208 q-6 22 4 30" stroke="#000" stroke-opacity=".2" stroke-width="3" fill="none" stroke-linecap="round"/>
+      ${beardSvg}<path d="${mouth}" stroke="#5a2a28" stroke-width="4" fill="${e === 'sh' ? '#2a0f0f' : 'none'}" stroke-linecap="round"/>${stache}${wrinkles}${glasses}${hat}
+      <defs><linearGradient id="shade" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity=".25"/><stop offset=".6" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".55"/></linearGradient></defs>
+    </svg>`;
+  }
   function portrait(id, e = 'n') {
     const P = PORTRAITS[id];
     if (!P) return '';
+    if (LOOKS[id]) return genericPortrait(LOOKS[id], e);
     const brow = BROWS[e] || BROWS.n, mouth = MOUTH[e] || MOUTH.n;
     let behind = '', front = '', body = '';
     const neck = `<rect x="128" y="262" width="44" height="50" fill="${P.skin}" opacity=".9"/><rect x="128" y="262" width="44" height="22" fill="#000" opacity=".18"/>`;
@@ -298,5 +432,5 @@ const Art = (() => {
     </svg>`;
   }
 
-  return { bg: name => (BG[name] || BG.black)(), portrait, PORTRAITS };
+  return { bg: name => (BG[name] || BG.black)(), portrait, PORTRAITS, define };
 })();

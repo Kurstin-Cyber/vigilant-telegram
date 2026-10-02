@@ -5,9 +5,15 @@ const has = id => !!G && G.clues.includes(id);
 (() => {
   'use strict';
   const $ = id => document.getElementById(id);
-  const { NAMES, CLUES, SOLUTION, SUSPECTS, episodes: EPS } = STORY;
+  let CASE, NAMES, CLUES, SOLUTION, SUSPECTS, EPS;
+  function useCase(id) {
+    CASE = CASES[id] || CASES.blackwood;
+    NAMES = CASE.names; CLUES = CASE.clues; SOLUTION = CASE.solution; SUSPECTS = CASE.suspects; EPS = CASE.episodes;
+    Object.entries(CASE.characters || {}).forEach(([cid, c]) => { if (c.look) Art.define(cid, c.look); });
+  }
+  useCase('blackwood');
   const IS_TV = location.pathname.replace(/\/+$/, '') === '/tv' || new URLSearchParams(location.search).has('tv');
-  const SAVE_KEY = 'blackwood-files-v3', SET_KEY = 'blackwood-files-settings';
+  const SAVE_KEY = 'mystery-night-v4', SET_KEY = 'blackwood-files-settings';
   const E = {
     stage: $('stage'), bg: [$('bgA'), $('bgB')], fx: $('fx'), chars: $('chars'), dialog: $('dialog'),
     dname: $('dname'), dtext: $('dtext'), dnext: $('dnext'), choices: $('choices'), card: $('card'),
@@ -15,13 +21,15 @@ const has = id => !!G && G.clues.includes(id);
   };
 
   /* ---------- persistence ---------- */
-  let save = { cur: null, epStart: {}, completed: 0 };
+  let save = { cur: null, cases: {}, lastCase: 'blackwood' };
+  const sv = () => { save.cases = save.cases || {}; return (save.cases[CASE.id] = save.cases[CASE.id] || { epStart: {}, completed: 0 }); };
   let settings = { auto: true, muted: false, voice: true };
   try { const s = JSON.parse(localStorage.getItem(SAVE_KEY)); if (s) save = Object.assign(save, s); } catch (e) {}
   try { const s = JSON.parse(localStorage.getItem(SET_KEY)); if (s) settings = Object.assign(settings, s); } catch (e) {}
   const persist = () => { try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); localStorage.setItem(SET_KEY, JSON.stringify(settings)); } catch (e) {} };
-  const newG = () => ({ ep: 0, scene: 0, clues: [], flags: {}, done: {}, marks: {}, composure: 3, finale: false, players: [], votes: {}, verdict: {}, cleared: {}, attempt: {} });
+  const newG = () => ({ ep: 0, scene: 0, clues: [], flags: {}, done: {}, marks: {}, composure: 3, finale: false, players: [], votes: {}, verdict: {}, cleared: {}, attempt: {}, caseId: CASE.id });
   const snap = () => JSON.stringify(G);
+  function loadSnap(s) { const g = JSON.parse(s); useCase(g.caseId || 'blackwood'); return g; }
 
   /* ---------- timers / flow ---------- */
   let timers = new Set(), pausedQ = [], paused = false, waiter = null, typing = null, frames = [], busy = false, flowToken = 0;
@@ -190,7 +198,8 @@ const has = id => !!G && G.clues.includes(id);
       setBg(sc.bg, true); setFx(sc.fx || null);
       Sound.setAmbience(sc.amb || 'none'); Sound.setMood(sc.mood || 'none');
       save.cur = { ep: ei, scene: si, snap: snap() };
-      if (si === 0 && !save.epStart[ei]) save.epStart[ei] = snap();
+      save.lastCase = CASE.id;
+      if (si === 0 && !sv().epStart[ei]) sv().epStart[ei] = snap();
       persist(); updateHud(); pushStatus('playing');
       E.stage.classList.remove('fade');
       const pre = si === (ep.titleScene || 0) && !opts.noIntro ? intro(ep) : [];
@@ -391,7 +400,7 @@ const has = id => !!G && G.clues.includes(id);
       E.card.classList.remove('on');
       overlay(`<div class="panel center"><h2>The case fell apart</h2><p>You ran out of composure before you ran out of evidence. Gather your thoughts and try the confrontation again.</p>
         <button class="big" id="retry">Try the confrontation again</button><button id="tomenu">Main menu</button></div>`);
-      $('retry').onclick = () => { G = JSON.parse(save.cur.snap); startScene(save.cur.ep, save.cur.scene, { noIntro: true }); };
+      $('retry').onclick = () => { G = loadSnap(save.cur.snap); startScene(save.cur.ep, save.cur.scene, { noIntro: true }); };
       $('tomenu').onclick = showTitle;
     });
   }
@@ -414,11 +423,11 @@ const has = id => !!G && G.clues.includes(id);
   function closeOverlay() { E.overlay.classList.remove('on', 'lobbymode'); E.overlay.innerHTML = ''; E.overlay.dataset.lock = ''; setPaused(false); }
 
   function suspectWatch(whoHighlight, watch) {
-    return ['pennington', 'margaret', 'vivian', 'hale'].map(id => `<div class="sus ${id === whoHighlight ? 'hot' : ''}"><div class="av" style="--c:${Art.PORTRAITS[id].col}">${Art.portrait(id, id === whoHighlight ? 'sh' : 'n')}</div><div><b style="color:${Art.PORTRAITS[id].col}">${NAMES[id]}</b>${id === whoHighlight ? ' <em>CLIFFHANGER</em>' : ''}<br><span>${esc(watch[id] || 'No information yet.')}</span></div></div>`).join('');
+    return SUSPECTS.filter(id => Art.PORTRAITS[id]).map(id => `<div class="sus ${id === whoHighlight ? 'hot' : ''}"><div class="av" style="--c:${Art.PORTRAITS[id].col}">${Art.portrait(id, id === whoHighlight ? 'sh' : 'n')}</div><div><b style="color:${Art.PORTRAITS[id].col}">${NAMES[id]}</b>${id === whoHighlight ? ' <em>CLIFFHANGER</em>' : ''}<br><span>${esc(watch[id] || 'No information yet.')}</span></div></div>`).join('');
   }
   function openFile(tab = 'ev') {
     const by = type => G.clues.filter(c => CLUES[c].type === type).map(c => `<div class="clue"><span class="ico">${CLUES[c].icon}</span><div><b>${esc(CLUES[c].name)}</b><br>${esc(CLUES[c].text)}</div></div>`).join('') || '<div class="empty">Nothing yet.</div>';
-    const doneEps = Math.min(save.completed, EPS.length), watch = doneEps ? EPS[doneEps - 1].watch : {};
+    const doneEps = Math.min(sv().completed, EPS.length), watch = doneEps ? EPS[doneEps - 1].watch : {};
     const marks = ['Unmarked', 'Suspect', 'Cleared'];
     const votesHTML = () => {
       const pl = playersOf(), keys = Object.keys(G.votes).filter(k => !k.startsWith('f_') && k !== 'p3');
@@ -426,7 +435,7 @@ const has = id => !!G && G.clues.includes(id);
       return keys.map(k => `<div class="clue"><div><b>${esc(k.replace('r', 'Episode '))}</b><br>${pl.map((p, i) => { const b = G.votes[k][i] || {}; return esc(p.name) + ': ' + Object.keys(b).map(q => esc(NAMES[b[q]] || b[q])).join(' / '); }).join('<br>')}</div></div>`).join('');
     };
     const body = tab === 'ev' ? by('Evidence') : tab === 'te' ? by('Testimony') : tab === 'vo' ? votesHTML()
-      : `<div class="watch">${suspectWatch(null, watch)}</div><div class="label">Your notes</div>` + ['pennington', 'margaret', 'vivian', 'hale'].map(id => `<div class="markrow"><span>${NAMES[id]}</span><button class="mk s${G.marks[id] || 0}" data-mk="${id}">${marks[G.marks[id] || 0]}</button></div>`).join('');
+      : `<div class="watch">${suspectWatch(null, watch)}</div><div class="label">Your notes</div>` + SUSPECTS.filter(id => Art.PORTRAITS[id]).map(id => `<div class="markrow"><span>${NAMES[id]}</span><button class="mk s${G.marks[id] || 0}" data-mk="${id}">${marks[G.marks[id] || 0]}</button></div>`).join('');
     overlay(`<div class="panel"><button class="x" id="closeFile">×</button><h2>Case file</h2>
       <div class="tabs"><button data-t="ev" class="${tab === 'ev' ? 'on' : ''}">Evidence</button><button data-t="te" class="${tab === 'te' ? 'on' : ''}">Testimony</button><button data-t="su" class="${tab === 'su' ? 'on' : ''}">Suspects</button><button data-t="vo" class="${tab === 'vo' ? 'on' : ''}">Votes</button></div>${body}</div>`);
     $('closeFile').onclick = closeOverlay;
@@ -437,7 +446,7 @@ const has = id => !!G && G.clues.includes(id);
     overlay(`<div class="panel center"><h2>Paused</h2>
       <button class="big" id="mResume">Resume</button><button id="mRestart">Restart this scene</button><button id="mAuto">${settings.auto ? 'Auto-advance: on' : 'Auto-advance: off'}</button><button id="mSound">${settings.muted ? 'Sound: off' : 'Sound: on'}</button>${Voice.supported() ? `<button id="mVoice">${settings.voice ? 'Spoken dialogue: on' : 'Spoken dialogue: off'}</button>` : ''}<button id="mTitle">Main menu</button></div>`);
     $('mResume').onclick = closeOverlay;
-    $('mRestart').onclick = () => { G = JSON.parse(save.cur.snap); startScene(save.cur.ep, save.cur.scene, { noIntro: true, quick: true }); };
+    $('mRestart').onclick = () => { G = loadSnap(save.cur.snap); startScene(save.cur.ep, save.cur.scene, { noIntro: true, quick: true }); };
     $('mAuto').onclick = () => { toggleAuto(); openMenu(); };
     $('mSound').onclick = () => { toggleSound(); openMenu(); };
     if ($('mVoice')) $('mVoice').onclick = () => { toggleVoice(); openMenu(); };
@@ -469,7 +478,7 @@ const has = id => !!G && G.clues.includes(id);
   }
   function persistVotes() {
     if (save.cur) save.cur.snap = snap();
-    if (save.epStart[G.ep + 1]) save.epStart[G.ep + 1] = snap();
+    if (sv().epStart[G.ep + 1]) sv().epStart[G.ep + 1] = snap();
     persist();
   }
   const voteQs = def => def.qs.map(q => ({ ...q, options: (q.options || def.options).filter(o => !(def.exclude || []).includes(o.id)) }));
@@ -552,7 +561,7 @@ const has = id => !!G && G.clues.includes(id);
   }
   function scoreboard() {
     const players = playersOf();
-    const rounds = [['r1', 'edmund', 'Ep 1'], ['r2', 'edmund', 'Ep 2'], ['r3', 'edmund', 'Ep 3 · Edmund'], ['r3', 'hale', 'Ep 3 · Hale'], ['f_edmund#1', 'edmund', 'Final · Edmund'], ['f_hale#1', 'hale', 'Final · Hale']];
+    const rounds = CASE.scoreRounds;
     const rows = players.map((p, i) => {
       const cells = rounds.map(([k, q]) => { const b = (G.votes[k] || [])[i]; return b ? (b[q] === SOLUTION[q] ? 1 : 0) : null; });
       return { name: p.name, cells, score: cells.filter(c => c === 1).length };
@@ -561,15 +570,15 @@ const has = id => !!G && G.clues.includes(id);
     return `<div class="label">Detective scoreboard</div><div class="score"><table><tr><th></th>${rounds.map(r => `<th>${r[2]}</th>`).join('')}<th>Total</th></tr>
       ${rows.map(r => `<tr class="${players.length > 1 && r.score === best ? 'top' : ''}"><td>${esc(r.name)}</td>${r.cells.map(c => `<td>${c === null ? '–' : c ? '✓' : '✗'}</td>`).join('')}<td><b>${r.score}</b></td></tr>`).join('')}</table></div>
       ${players.length > 1 ? `<p class="stats">Sharpest detective: <b>${rows.filter(r => r.score === best).map(r => esc(r.name)).join(' & ')}</b></p>` : ''}
-      <div class="label">The truth</div><p class="teaser">Edmund Blackwood was killed by <b>${esc(NAMES[SOLUTION.edmund])}</b>. Dr. Hale was killed by <b>${esc(NAMES[SOLUTION.hale])}</b>.</p>`;
+      <div class="label">The truth</div><p class="teaser">${CASE.truth(NAMES)}</p>`;
   }
 
   /* ---------- cliffhanger ---------- */
   function cliffhanger(who) {
     const ei = G.ep, ep = EPS[ei];
     clearTimers(); frames = []; hideChoices(); E.dialog.classList.remove('on');
-    save.completed = Math.max(save.completed, ei + 1);
-    if (ei + 1 < EPS.length) save.epStart[ei + 1] = snap();
+    sv().completed = Math.max(sv().completed, ei + 1);
+    if (ei + 1 < EPS.length) sv().epStart[ei + 1] = snap();
     save.cur = ei + 1 < EPS.length ? { ep: ei + 1, scene: 0, snap: snap() } : null;
     persist();
     Sound.setMood('dread'); Sound.sfx('cliff'); doFlash('#c02020'); doShake();
@@ -578,14 +587,14 @@ const has = id => !!G && G.clues.includes(id);
       Object.keys(stage).forEach(id => { if (id !== who) hideChar(id); });
       if (who) { showChar(who, 'c', { hale: 's', pennington: 'w', margaret: 'n' }[who] || 'sh'); stage[who].el.classList.add('hero'); spotlight(who); }
     });
-    after(2300, () => { E.tbc.textContent = ep.last ? 'SEASON ONE · THE END?' : 'TO BE CONTINUED…'; E.tbc.classList.add('on'); });
+    after(2300, () => { E.tbc.textContent = ep.last ? CASE.endCard : 'TO BE CONTINUED…'; E.tbc.classList.add('on'); });
     go(7500, () => summary(who, ep, ei));
   }
   function summary(who, ep, ei) {
     E.tbc.classList.remove('on');
     const last = !!ep.last, voted = ep.vote && G.votes[ep.vote.key];
     const stats = last ? `<div class="stats">Clues found: <b>${G.clues.length}/${Object.keys(CLUES).length}</b> · Composure left: <b>${G.composure}/3</b></div>${scoreboard()}` : '';
-    overlay(`<div class="panel center wide"><div class="eyebrow">${last ? 'Season One complete' : `Episode ${ep.n} complete`}</div><h2>${esc(ep.title)}</h2>
+    overlay(`<div class="panel center wide"><div class="eyebrow">${last ? CASE.completeLabel : `Episode ${ep.n} complete`}</div><h2>${esc(ep.title)}</h2>
       <div class="label">Suspect watch</div><div class="watch">${suspectWatch(who, ep.watch)}</div>${stats}
       <p class="teaser">${esc(ep.teaser)}</p>
       ${ep.vote ? `<button class="${voted ? '' : 'big'}" id="vBtn">${voted ? 'Change your votes' : (playersOf().length > 1 ? 'Detectives: cast your votes' : 'Cast your vote')}</button>` : ''}
@@ -603,8 +612,8 @@ const has = id => !!G && G.clues.includes(id);
   /* ---------- title / episodes ---------- */
   function startEpisode(ei, players, room) {
     const keep = G && G.players, keepRoom = G && G.room;
-    G = ei === 0 || !save.epStart[ei] ? newG() : JSON.parse(save.epStart[ei]);
-    if (ei === 0) { save.epStart = {}; G.players = players || keep || []; G.room = room !== undefined ? !!room : !!keepRoom; }
+    G = ei === 0 || !sv().epStart[ei] ? newG() : JSON.parse(sv().epStart[ei]);
+    if (ei === 0) { sv().epStart = {}; sv().completed = Math.min(sv().completed, 0); G.players = players || keep || []; G.room = room !== undefined ? !!room : !!keepRoom; }
     else if (room !== undefined) G.room = !!room;
     startScene(ei, 0);
   }
@@ -623,6 +632,12 @@ const has = id => !!G && G.clues.includes(id);
     };
     render();
   }
+  /* Choose a case (solo and pass-and-play). */
+  function pickCase(then, back) {
+    overlay(`<div class="panel wide"><button class="x" id="cBack">×</button><h2>Choose a case</h2><div class="cases">${CASE_LIST.map(c => `<button class="case" data-c="${c.id}"><span class="tag">${esc(c.tag)}</span><b>${esc(c.title)}</b><span class="len">${esc(c.length)}</span><span class="bl">${esc(c.blurb)}</span><span class="src">${esc(c.source)}</span></button>`).join('')}</div></div>`, true);
+    $('cBack').onclick = back || showTitle;
+    E.overlay.querySelectorAll('[data-c]').forEach(b => b.onclick = () => { useCase(b.dataset.c); then(b.dataset.c); });
+  }
   function showTitle() {
     if (IS_TV) return showTvLobby();
     clearTimers(); frames = []; hideChoices(); E.dialog.classList.remove('on'); E.card.classList.remove('on'); E.tbc.classList.remove('on');
@@ -632,30 +647,30 @@ const has = id => !!G && G.clues.includes(id);
     setBg('exterior', true); setFx('snow'); Sound.setAmbience('wind'); Sound.setMood('theme');
     $('hud').classList.remove('on');
     const canContinue = !!(save.cur && save.cur.snap);
-    overlay(`<div class="titlescreen"><div class="eyebrow">A murder mystery in episodes</div><h1>The Blackwood Files</h1><div class="sub">Season One</div>
-      ${canContinue ? `<button class="big" id="tCont">Continue · Episode ${save.cur.ep + 1}</button>` : ''}
+    overlay(`<div class="titlescreen"><div class="eyebrow">Cinematic murder mysteries</div><h1>Mystery Night</h1><div class="sub">Choose a case</div>
+      ${canContinue ? `<button class="big" id="tCont">Continue · ${esc((CASES[JSON.parse(save.cur.snap).caseId || 'blackwood'] || CASES.blackwood).title)} · Episode ${save.cur.ep + 1}</button>` : ''}
       <button class="${canContinue ? '' : 'big'}" id="tNew">${canContinue ? 'New game' : 'Begin'}</button>
       <button id="tEps">Episodes</button><button id="tGroup" hidden>Host a group night (big screen + phones)</button><button id="tSound">${settings.muted ? 'Sound: off' : 'Sound: on'}</button>${Voice.supported() ? `<button id="tVoice">${settings.voice ? 'Spoken dialogue: on' : 'Spoken dialogue: off'}</button>` : ''}
       <div class="tip">Best with headphones and the sound up. The story plays itself. Tap or press Space to move faster.</div></div>`);
     E.overlay.classList.add('title');
     const go1 = f => () => { Sound.init(); Sound.setMuted(settings.muted); E.overlay.classList.remove('title'); closeOverlay(); $('hud').classList.add('on'); f(); };
-    if (canContinue) $('tCont').onclick = go1(() => { G = JSON.parse(save.cur.snap); startScene(save.cur.ep, save.cur.scene, { noIntro: save.cur.scene !== (EPS[save.cur.ep].titleScene || 0) }); });
+    if (canContinue) $('tCont').onclick = go1(() => { G = loadSnap(save.cur.snap); startScene(save.cur.ep, save.cur.scene, { noIntro: save.cur.scene !== (EPS[save.cur.ep].titleScene || 0) }); });
     $('tNew').onclick = () => {
       if (canContinue && !confirm('Start over? Your saved progress will be erased.')) return;
-      playersSetup(players => {
-        save = { cur: null, epStart: {}, completed: 0 };
+      pickCase(() => playersSetup(players => {
+        save.cur = null; sv().epStart = {}; sv().completed = 0;
         go1(() => { G = newG(); startEpisode(0, players); })();
-      });
+      }));
     };
-    $('tEps').onclick = () => { Sound.init(); E.overlay.classList.remove('title'); showEpisodes(); };
+    $('tEps').onclick = () => { Sound.init(); E.overlay.classList.remove('title'); useCase(save.lastCase || 'blackwood'); showEpisodes(); };
     $('tSound').onclick = () => { Sound.init(); toggleSound(); showTitle(); };
     if ($('tVoice')) $('tVoice').onclick = () => { toggleVoice(); showTitle(); };
     Room.available().then(ok => { const g = $('tGroup'); if (ok && g) { g.hidden = false; g.onclick = () => { location.href = 'tv'; }; } });
   }
   function showEpisodes() {
-    overlay(`<div class="panel wide"><button class="x" id="eBack">×</button><h2>Episodes</h2>` + EPS.map((ep, i) => {
-      const open = i <= save.completed;
-      return `<div class="ep ${open ? '' : 'locked'}"><div><b>Episode ${ep.n}: ${esc(ep.title)}</b><br><span>${open ? esc(ep.logline) : 'Finish the previous episode to unlock.'}</span></div>${open ? `<button data-e="${i}">${i < save.completed ? 'Replay' : 'Play'}</button>` : '<em>Locked</em>'}</div>`;
+    overlay(`<div class="panel wide"><button class="x" id="eBack">×</button><h2>${esc(CASE.title)}: episodes</h2><p class="teaser">Last played case. Start a new game to pick another.</p>` + EPS.map((ep, i) => {
+      const open = i <= sv().completed;
+      return `<div class="ep ${open ? '' : 'locked'}"><div><b>Episode ${ep.n}: ${esc(ep.title)}</b><br><span>${open ? esc(ep.logline) : 'Finish the previous episode to unlock.'}</span></div>${open ? `<button data-e="${i}">${i < sv().completed ? 'Replay' : 'Play'}</button>` : '<em>Locked</em>'}</div>`;
     }).join('') + `</div>`);
     $('eBack').onclick = showTitle;
     E.overlay.querySelectorAll('[data-e]').forEach(b => b.onclick = () => {
@@ -722,7 +737,8 @@ const has = id => !!G && G.clues.includes(id);
   function startGroupGame() {
     Sound.init(); Sound.setMuted(settings.muted);
     const players = Room.players().filter(p => !p.observer).map(p => ({ id: p.id, name: p.name }));
-    save = { cur: null, epStart: {}, completed: 0 };
+    useCase(CASES[Room.caseId()] ? Room.caseId() : 'blackwood');
+    save.cur = null; sv().epStart = {}; sv().completed = 0;
     E.overlay.classList.remove('title'); closeOverlay(); $('hud').classList.add('on');
     G = newG(); tvPaused = false;
     startEpisode(0, players, true);
@@ -730,7 +746,7 @@ const has = id => !!G && G.clues.includes(id);
   }
   function resumeGroupGame() {
     Sound.init(); Sound.setMuted(settings.muted);
-    G = JSON.parse(save.cur.snap); G.room = true; tvPaused = false;
+    G = loadSnap(save.cur.snap); G.room = true; tvPaused = false;
     syncPlayers(Room.players());
     E.overlay.classList.remove('title'); closeOverlay(); $('hud').classList.add('on');
     startScene(save.cur.ep, save.cur.scene, { noIntro: save.cur.scene !== (EPS[save.cur.ep].titleScene || 0) });
@@ -738,7 +754,7 @@ const has = id => !!G && G.clues.includes(id);
   /* No game yet on this screen: start one here, or connect to the moderator's game by its code. */
   function showTvStart(error) {
     E.overlay.classList.remove('title');
-    overlay(`<div class="panel center wide"><div class="eyebrow">Group night</div><h2>The Blackwood Files</h2>
+    overlay(`<div class="panel center wide"><div class="eyebrow">Group night</div><h2>Mystery Night</h2>
       <div class="choose"><div class="pick"><h3>Start a game here</h3><p>Everyone scans the QR code. The first person to join becomes the moderator.</p><button class="big" id="sNew">Start a new game night</button></div>
       <div class="pick"><h3>The moderator already has a game</h3><p>On their phone they opened this website and tapped <b>Host a game</b>. Type the code they see:</p>
       <input id="sCode" class="codebox" maxlength="4" autocomplete="off" autocapitalize="characters" placeholder="ABCD"><button id="sGo">Connect this screen</button><p class="error" id="sErr">${esc(error || '')}</p></div></div>
@@ -759,7 +775,7 @@ const has = id => !!G && G.clues.includes(id);
     hideChar('all'); E.chars.innerHTML = ''; tvPaused = false;
     setBg('exterior', true); setFx('snow'); Sound.setAmbience('wind'); Sound.setMood('theme');
     $('hud').classList.remove('on'); $('roster').innerHTML = '';
-    overlay(`<div class="titlescreen"><div class="eyebrow">Opening the room…</div><h1>The Blackwood Files</h1></div>`, true);
+    overlay(`<div class="titlescreen"><div class="eyebrow">Opening the room…</div><h1>Mystery Night</h1></div>`, true);
     E.overlay.classList.add('title');
     let opened = null;
     try { opened = await Room.open(); } catch (err) {
@@ -768,18 +784,28 @@ const has = id => !!G && G.clues.includes(id);
       return;
     }
     if (!opened) return showTvStart();
-    if (!tvWired) { tvWired = true; Room.on('players', syncPlayers); Room.on('cmd', onHostCommand); }
-    const url = Room.joinUrl(), canResume = !!(save.cur && save.cur.snap && JSON.parse(save.cur.snap).room);
+    if (!tvWired) {
+      tvWired = true; Room.on('players', syncPlayers); Room.on('cmd', onHostCommand);
+      Room.on('case', id => { if ($('lStart') && CASES[id]) { useCase(id); renderTvLobby(); } });
+    }
+    useCase(CASES[Room.caseId()] ? Room.caseId() : 'blackwood');
+    renderTvLobby();
+  }
+  function renderTvLobby() {
+    const url = Room.joinUrl(), meta = CASE_LIST.find(c => c.id === CASE.id) || CASE_LIST[0];
+    const canResume = !!(save.cur && save.cur.snap && JSON.parse(save.cur.snap).room && JSON.parse(save.cur.snap).caseId === CASE.id);
     let qr = '';
     try { const q = qrcode(0, 'M'); q.addData(url); q.make(); qr = q.createSvgTag({ cellSize: 4, margin: 0, scalable: true }); } catch (err) { qr = ''; }
-    const cast = SUSPECTS.map(id => `<div class="cast1"><span class="av" style="--c:${Art.PORTRAITS[id].col}">${Art.portrait(id, 'n')}</span><span>${esc(NAMES[id])}</span></div>`).join('');
+    const cast = (CASE.cast || SUSPECTS).filter(id => Art.PORTRAITS[id]).map(id => `<div class="cast1"><span class="av" style="--c:${Art.PORTRAITS[id].col}">${Art.portrait(id, 'n')}</span><span>${esc(NAMES[id])}</span></div>`).join('');
+    const cases = CASE_LIST.map(c => `<button class="casebtn ${c.id === CASE.id ? 'on' : ''}" data-case="${c.id}"><b>${esc(c.title)}</b><small>${esc(c.tag)}</small></button>`).join('');
     E.overlay.classList.remove('title');
     overlay(`<div class="lobby">
-      <div class="lcol"><div class="eyebrow">A murder mystery for the whole table</div><h1>The Blackwood Files</h1><div class="sub">Season One · Four Episodes</div>
-        <p class="blurb">December, 1926. A blizzard seals Blackwood Manor, and its master is dead at his own dinner party. Five people are still under the roof. Over four episodes you will search the rooms, catch the lies and vote on who did it.</p>
-        <p class="blurb dim">Every episode ends on a cliffhanger. Someone here is not who they seem. Perhaps more than one.</p>
+      <div class="lcol"><div class="eyebrow">Mystery Night · tonight's case</div><h1>${esc(meta.title)}</h1><div class="sub">${esc(meta.length)}</div>
+        <p class="blurb">${esc(meta.blurb)}</p>
+        <p class="blurb dim">${esc(meta.hook)}</p>
         <div class="cast">${cast}</div>
-        <div class="meta">2 to 30 detectives · about 75 minutes · no apps, just your phone</div></div>
+        <div class="cases-row">${cases}</div>
+        <div class="meta">2 to 30 detectives · no apps, just your phone · ${esc(meta.source)}</div></div>
       <div class="rcol"><div class="qrbox"><div class="qrtitle">Scan to play!</div><div class="qrsvg">${qr}</div>
         <div class="qrsub">or go to <b>${esc(Room.host())}</b><br>and enter code <b class="codebig">${Room.code()}</b></div></div>
         <div class="label" id="lCount">Detectives (0)</div><div id="lPlayers" class="pchips"></div>
@@ -789,6 +815,7 @@ const has = id => !!G && G.clues.includes(id);
         <button id="lSolo">Play on this screen only</button></div></div>`, true);
     E.overlay.classList.add('lobbymode');
     renderLobbyPlayers(Room.players());
+    E.overlay.querySelectorAll('[data-case]').forEach(b => b.onclick = () => Room.setCase(b.dataset.case));
     $('lStart').onclick = () => { if (canResume && !confirm('Start over? The saved story will be lost.')) return; startGroupGame(); };
     if ($('lResume')) $('lResume').onclick = resumeGroupGame;
     $('lSolo').onclick = () => { Room.forget(); location.href = 'index.html'; };

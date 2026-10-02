@@ -2,7 +2,7 @@
    questions and collects their answers. Same shape as Squad Bingo: Server-Sent Events down, small POSTs up.
    Without the server (for example on GitHub Pages) nothing here is used and the game plays on one screen. */
 const Room = (() => {
-  let code = null, tvToken = null, es = null, players = [], hostId = null, lastCmd = 0, seq = 0, cur = null, connected = false;
+  let caseId = 'blackwood', code = null, tvToken = null, es = null, players = [], hostId = null, lastCmd = 0, seq = 0, cur = null, connected = false;
   const listeners = {};
   const emit = (ev, ...a) => (listeners[ev] || []).forEach(f => f(...a));
   const on = (ev, fn) => { (listeners[ev] = listeners[ev] || []).push(fn); };
@@ -59,6 +59,7 @@ const Room = (() => {
 
   function onState(s) {
     players = s.players; hostId = s.hostId;
+    if (s.caseId && s.caseId !== caseId) { caseId = s.caseId; emit('case', caseId); }
     emit('players', players, hostId);
     emit('phase', s.phase);
     for (const c of s.cmds || []) if (c.seq > lastCmd) { lastCmd = c.seq; emit('cmd', c.cmd); }
@@ -92,10 +93,11 @@ const Room = (() => {
   function cancel(id) { if (cur && cur.id === id) { clearTimeout(cur.timer); cur = null; post('endask', { id, result: null }); } }
   function showResult(result) { post('endask', { id: -1, result }); }
   function setStatus(s) { post('status', s); }
+  function setCase(id) { caseId = id; post('case', { id }); emit('case', id); }
   function close(id, result) { finish(id, 'host', result); }
 
   return {
-    available, open, create, claim, on, ask, cancel, close, showResult, setStatus,
+    available, open, create, claim, on, ask, setCase, caseId: () => caseId, cancel, close, showResult, setStatus,
     code: () => code, players: () => players, hostId: () => hostId, onlineIds,
     live: () => !!code && connected && onlineIds().length > 0,
     joinUrl: () => (location.origin + '/' + code),

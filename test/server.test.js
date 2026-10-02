@@ -37,7 +37,7 @@ async function stateWhen(path, until) {
 test("health, and pages are served", async () => {
   const h = await (await fetch(base + "/health")).json();
   assert.equal(h.ok, true);
-  for (const [p, needle] of [["/", "Join"], ["/ABCD", "Join"], ["/tv", "Blackwood"], ["/js/art.js", "Art"], ["/style.css", "--gold"]]) {
+  for (const [p, needle] of [["/", "Join"], ["/ABCD", "Join"], ["/tv", "Mystery Night"], ["/js/art.js", "Art"], ["/style.css", "--gold"]]) {
     const r = await fetch(base + p);
     assert.equal(r.status, 200, p);
     assert.match(await r.text(), new RegExp(needle), p);

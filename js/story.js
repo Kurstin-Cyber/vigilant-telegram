@@ -852,5 +852,17 @@ const STORY = (() => {
     last: true
   };
 
-  return { NAMES, SUSPECTS, SUSPECT_OPTIONS, CLUES, SOLUTION, episodes: [ep1, ep2, ep3, ep4] };
+  const VOICES = { nar: [10, 0.95, 1], you: [10, 0.95, 1], pennington: [9, 0.9, 1], hale: [6, 0.93, 1], margaret: [2, 0.88, 1], vivian: [7, 1.06, 1], dobbs: [8, 0.95, 1], edmund: [5, 0.88, 1] };
+  const characters = {};
+  Object.keys(NAMES).forEach(id => { characters[id] = { name: NAMES[id], voice: VOICES[id] || VOICES.nar }; });
+  characters.nar = { name: '', voice: VOICES.nar };
+  const episodes = [ep1, ep2, ep3, ep4];
+  CASES.blackwood = {
+    id: 'blackwood', title: 'The Blackwood Files', names: NAMES, suspects: SUSPECTS, suspectOptions: SUSPECT_OPTIONS, clues: CLUES,
+    solution: SOLUTION, episodes, characters, cast: SUSPECTS,
+    scoreRounds: [['r1', 'edmund', 'Ep 1'], ['r2', 'edmund', 'Ep 2'], ['r3', 'edmund', 'Ep 3 · Edmund'], ['r3', 'hale', 'Ep 3 · Hale'], ['f_edmund#1', 'edmund', 'Final · Edmund'], ['f_hale#1', 'hale', 'Final · Hale']],
+    truth: n => `Edmund Blackwood was killed by <b>${n[SOLUTION.edmund]}</b>. Dr. Hale was killed by <b>${n[SOLUTION.hale]}</b>.`,
+    endCard: 'SEASON ONE · THE END?', completeLabel: 'Season One complete'
+  };
+  return { NAMES, SUSPECTS, SUSPECT_OPTIONS, CLUES, SOLUTION, episodes };
 })();

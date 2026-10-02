@@ -117,6 +117,7 @@
     const lobby = view.phase === 'lobby';
     $('#body').innerHTML = `<div class="card center"><div class="big-emoji">${lobby ? '🕯️' : view.phase === 'ended' ? '🎬' : '🎞️'}</div>
       <h2>${lobby ? (view.you.observer ? `You're the moderator, ${esc(view.you.name)}` : `You're in, ${esc(view.you.name)}`) : view.phase === 'ended' ? 'The night is over' : esc(s.text || 'Watch the big screen')}</h2>
+      ${lobby && typeof CASE_LIST !== 'undefined' ? `<p class="meta">Tonight's case: <b>${esc((CASE_LIST.find(c => c.id === view.caseId) || {}).title || '')}</b></p>` : ''}
       <p>${lobby ? (view.you.host ? (view.tvOnline ? 'You are the host. Start the story when everyone has joined.' : 'You are the host. First connect a big screen below.') : 'Waiting for the host to start the story. Look up at the big screen.') : s.paused ? 'Paused.' : 'Eyes on the screen. When the story needs you, your phone will buzz.'}</p></div>`;
   }
 
@@ -180,7 +181,9 @@
       <p>On the TV or laptop, open <b>${esc(location.host)}/tv</b> and type this code:</p><div class="bigcode">${esc(view.code)}</div>
       <p class="meta">${view.tvWindow ? 'The big screen can connect now.' : 'Tap below first, then type the code on the big screen.'}</p>
       ${view.tvWindow ? '' : '<button data-cmd="openTv">Allow a big screen to connect</button>'}</div>`;
-    box.innerHTML = `${tvCard}<div class="card host"><div class="eyebrow">👑 Host controls</div><div class="hbtns">
+    const pick = !lobby || typeof CASE_LIST === 'undefined' ? '' : `<div class="card"><div class="eyebrow">🔎 Tonight's case</div><div class="hbtns">${CASE_LIST.map(c =>
+      `<button data-case="${c.id}" class="${c.id === view.caseId ? 'primary' : ''}">${esc(c.title)}<br><span class="meta">${esc(c.tag)} · ${esc(c.length)}</span></button>`).join('')}</div></div>`;
+    box.innerHTML = `${tvCard}${pick}<div class="card host"><div class="eyebrow">👑 Host controls</div><div class="hbtns">
       ${lobby ? `<button class="primary" data-cmd="start" ${view.tvOnline ? '' : 'disabled'}>▶ Start the story</button>` : ended ? '' : `
         <button data-cmd="${s.paused ? 'resume' : 'pause'}">${s.paused ? '▶ Resume' : '⏸ Pause'}</button>
         <button data-cmd="skip">⏭ Skip line</button>
@@ -188,6 +191,9 @@
         ${view.ask ? `<button class="primary" data-cmd="closeAsk">✔ Close voting now</button>` : ''}
         <button class="danger" data-cmd="end">⏹ End the night</button>`}
     </div></div>`;
+    box.querySelectorAll('[data-case]').forEach(b => b.onclick = async () => {
+      try { await api('command', { cmd: 'case', arg: b.dataset.case }); } catch (e) { setBanner(e.message); }
+    });
     box.querySelectorAll('[data-cmd]').forEach(b => b.onclick = async () => {
       if (b.dataset.cmd === 'end' && !confirm('End the night for everyone?')) return;
       try { await api('command', { cmd: b.dataset.cmd }); } catch (e) { setBanner(e.message); }
