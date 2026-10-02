@@ -1,32 +1,48 @@
-/* The Blackwood Files, Season One. All story content lives here. */
+/* The Blackwood Files, Season One. All story content lives here (spoilers inside). */
 const STORY = (() => {
   const NAMES = {
-    you: 'Inspector Ashby', pennington: 'Pennington', margaret: 'Lady Margaret',
-    vivian: 'Vivian Cross', hale: 'Dr. Hale', dobbs: 'Mrs. Dobbs', pike: 'Constable Pike'
+    you: 'Inspector Ashby', edmund: 'Edmund Blackwood', pennington: 'Pennington', margaret: 'Lady Margaret',
+    vivian: 'Vivian Cross', hale: 'Dr. Hale', dobbs: 'Mrs. Dobbs'
   };
+  const SUSPECTS = ['pennington', 'margaret', 'vivian', 'hale', 'dobbs'];
+  const SUSPECT_OPTIONS = SUSPECTS.map(id => ({ id, label: NAMES[id], portrait: id }));
+  const SOLUTION = { edmund: 'margaret', hale: 'pennington' };
 
   const CLUES = {
     body: { icon: '🪑', name: `Edmund's body`, type: 'Evidence', text: `No wound, no blood, no struggle. Lips tinged blue, one hand clutching the chest. This was poison, not violence.` },
-    glasses: { icon: '🥃', name: 'Two brandy glasses', type: 'Evidence', text: `Two used glasses on the desk. One holds greenish dregs that smell faintly bitter. Edmund shared a drink with someone he trusted, and that someone walked away unharmed.` },
-    watch: { icon: '⌚', name: 'Smashed pocket watch', type: 'Evidence', text: `Edmund's gold watch, glass cracked, hands frozen at 9:12. The moment he fell.` },
-    ledger: { icon: '🔥', name: 'Burnt ledger scrap', type: 'Evidence', text: `A half-burned scrap from the grate: "...Hartley Orphans' Fund... withdrawn, J.H.... £4,200... £3,800..." Someone tried to destroy it and failed.` },
+    brandyGlasses: { icon: '🥃', name: 'Two brandy glasses', type: 'Evidence', text: `Two used brandy glasses on the desk. Both smell only of brandy. Edmund drank with a visitor, and nothing in the brandy looks wrong.` },
+    medicineGlass: { icon: '🧪', name: 'Silver medicine measure', type: 'Evidence', text: `Half hidden behind the lamp: a small silver measure with greenish, bitter-smelling dregs, beside a brown bottle labelled "Hale's Cardiac Tonic. One measure at night."` },
+    watch: { icon: '⌚', name: 'Smashed pocket watch', type: 'Evidence', text: `Edmund's gold watch, glass cracked, hands frozen at 9:12.` },
+    wallDent: { icon: '💥', name: 'Dent in the panelling', type: 'Evidence', text: `A fresh dent in the oak panelling beside the door, level with a man's shoulder, with a splinter of gold glass in it. The watch was thrown at the wall. It did not simply fall.` },
+    ledger: { icon: '🔥', name: 'Ledger scrap on the ash', type: 'Evidence', text: `A scrap lying face-up on the cold ash at the grate's edge: "...Hartley Orphans' Fund... withdrawn, J.H.... £4,200... £3,800..." The edges are charred, but the writing is perfectly legible, as if the page had been laid there to be found.` },
     key: { icon: '🗝️', name: 'Brass key marked S', type: 'Evidence', text: `Hidden behind Bleak House in the library: a small brass key stamped with the letter S.` },
     letter: { icon: '✉️', name: 'Unsent letter to the solicitor', type: 'Evidence', text: `"Mr. Crane. On Monday I will take the thefts from the Hartley Orphans' Fund to the magistrate. The signatures on those withdrawals are forged. I have known the man thirty years and it grieves me. E.B."` },
     vivianLetter: { icon: '💌', name: `Vivian's allowance letter`, type: 'Evidence', text: `Edmund cut Vivian's allowance to nothing last week. The paper is spotted with tears.` },
-    thursdays: { icon: '📒', name: 'The surviving ledger page', type: 'Evidence', text: `Withdrawals from the Orphans' Fund, always on the first Thursday of the month, signed "E. Blackwood". Pennington: the doctor visited on first Thursdays, and he and Edmund went over the books together.` },
+    thursdays: { icon: '📒', name: 'The surviving ledger page', type: 'Evidence', text: `Withdrawals from the Orphans' Fund, always on the first Thursday of the month, signed "E. Blackwood", with a treasurer's countersignature beneath. The doctor visited every first Thursday. The "E" has an odd looped tail.` },
     ashtray: { icon: '🚬', name: 'Cold ashtray', type: 'Evidence', text: `The conservatory ashtray holds one old stub under a layer of dust. Nobody smoked in this room tonight.` },
     bagEmpty: { icon: '👜', name: `Hale's medical bag`, type: 'Evidence', text: `Dr. Hale's bag, left open in the conservatory. A velvet loop meant for a small vial hangs empty.` },
-    vial: { icon: '🧪', name: 'Vial of digitalis', type: 'Evidence', text: `Found in Vivian's coat: a vial labelled "Tincture of Digitalis, J. Hale", nearly empty. Far more is missing than any heart patient would need.` },
-    digitalisRx: { icon: '💊', name: 'Edmund took digitalis', type: 'Testimony', text: `Dr. Hale volunteered that Edmund took digitalis for a weak heart, and that a misjudged dose might explain everything.` },
+    vial: { icon: '🧫', name: 'Vial of digitalis', type: 'Evidence', text: `Found in Vivian's coat: a vial labelled "Tincture of Digitalis, J. Hale", nearly empty.` },
+    foxglove: { icon: '🌿', name: 'Dried foxglove', type: 'Evidence', text: `A tin of dried foxglove leaves on Mrs. Dobbs's herb shelf. Foxglove is digitalis. She says Dr. Hale prescribed a tea of it for her swollen ankles.` },
+    handwriting: { icon: '✍️', name: 'The forger’s hand', type: 'Evidence', text: `Lady Margaret's household accounts. The capital "E" has the same looped tail as the forged "E. Blackwood" on the Fund's withdrawals.` },
+    confessionNote: { icon: '📄', name: 'Typed confession', type: 'Evidence', text: `Typed on the library machine: "I killed the Master. I cannot bear what I have done. Forgive me. J. Hale." Dr. Hale called his friend Edmund. Always.` },
+    teaTray: { icon: '🍵', name: 'The supper tray', type: 'Evidence', text: `Soup bowl scraped clean. A teacup holds greenish dregs with the same bitter smell as the silver measure in the study.` },
+    tonicShard: { icon: '🍾', name: 'Brown glass shard', type: 'Evidence', text: `In the fresh ash of the cellar furnace: a curved shard of brown glass with half a label: "...diac Tonic."` },
+    digitalisRx: { icon: '💊', name: 'Edmund took digitalis', type: 'Testimony', text: `Dr. Hale volunteered that Edmund took digitalis for a weak heart, in a nightly tonic.` },
     fundTalk: { icon: '🗣️', name: `Margaret: "a rot in the fund"`, type: 'Testimony', text: `Edmund spent weeks muttering about "a rot in the fund". Dr. Hale handles the charity's books.` },
     vivianAlibi: { icon: '📚', name: `Vivian's alibi`, type: 'Testimony', text: `Vivian says she was alone in the library from half past eight until the gong at half past nine.` },
-    haleAlibi: { icon: '🌿', name: `Hale's alibi`, type: 'Testimony', text: `Hale says he spent the evening in the conservatory with a cigar, and that Vivian kept him company until the gong.` },
-    haleVivian: { icon: '❓', name: 'Vivian never saw Hale', type: 'Testimony', text: `Vivian says Hale never came near the library. His alibi relied on her.` },
-    decanterClean: { icon: '🍾', name: 'The decanter was sealed', type: 'Testimony', text: `Mrs. Dobbs: a freshly sealed decanter and a single glass went to the study at ten to nine. Only one glass was sent.` },
-    dobbsGlass: { icon: '🥂', name: 'Hale fetched a glass', type: 'Testimony', text: `Mrs. Dobbs: Dr. Hale came to the kitchen around nine for a clean glass, saying Edmund wanted company for a nightcap.` },
-    penSaw: { icon: '👁️', name: 'Pennington saw Hale', type: 'Testimony', text: `Pennington saw Dr. Hale enter the study at five past nine with a glass of his own, and leave around twenty past.` },
-    vivianCoat: { icon: '🧥', name: `The vial in Vivian's coat`, type: 'Testimony', text: `Vivian: Hale took her coat at the door that evening. She found the vial in the pocket only after the gong, when she went for her gloves.` },
-    margaretTold: { icon: '🤫', name: 'Margaret told Hale', type: 'Testimony', text: `Lady Margaret told Hale two days ago that Edmund meant to "name names" on Monday. When asked who told her, she was vague.` }
+    haleAlibi: { icon: '🌿', name: `Hale's first alibi`, type: 'Testimony', text: `Hale first said he spent the evening in the conservatory with a cigar, and that Vivian kept him company until the gong.` },
+    haleVivian: { icon: '❓', name: 'Vivian never saw Hale', type: 'Testimony', text: `Vivian says Hale never came near the library. His first alibi relied on her.` },
+    decanterClean: { icon: '🍾', name: 'The decanter was sealed', type: 'Testimony', text: `Mrs. Dobbs: a freshly sealed decanter and a single glass went to the study at ten to nine.` },
+    dobbsGlass: { icon: '🥂', name: 'Hale fetched a glass', type: 'Testimony', text: `Mrs. Dobbs: Dr. Hale came to the kitchen around nine for a clean glass, saying Edmund wanted company.` },
+    penSaw: { icon: '👁️', name: 'Pennington saw Hale', type: 'Testimony', text: `Pennington saw Dr. Hale enter the study at five past nine with a glass, and leave around twenty past. He heard a crash at about nine twelve.` },
+    penOath: { icon: '🕯️', name: `Pennington's vow`, type: 'Testimony', text: `Pennington, shaking: "Whoever did this to the Master, sir, I will see justice done. If it takes the rest of my life."` },
+    haleLeft: { icon: '🚪', name: `Hale's account`, type: 'Testimony', text: `Hale admits the quarrel: Edmund accused him of forging the Fund's signatures, hurled his watch at the wall, and Hale left at twenty past nine. Edmund was alive, cursing him.` },
+    trayFigure: { icon: '🚶', name: 'Someone with a tray', type: 'Testimony', text: `Vivian: around half past nine she saw someone carrying a tray into the study. Dark clothes. She only saw a back.` },
+    vivianCoat: { icon: '🧥', name: `The vial in Vivian's coat`, type: 'Testimony', text: `Vivian: she found the vial in her coat pocket only after the gong, when she went for her gloves. The cloakroom was open to the whole house.` },
+    tonicRitual: { icon: '🕰️', name: `The nightly tonic`, type: 'Testimony', text: `Mrs. Dobbs: since his heart turned, Lady Margaret takes Edmund's tonic up to the study herself at half past nine every night. She will not let anyone else do it.` },
+    penBag: { icon: '🧳', name: `Who carried the bag`, type: 'Testimony', text: `Pennington: when the doctor arrived, Lady Margaret carried his bag to the cloakroom herself. He thought it a kind and unusual gesture.` },
+    margaretSlip: { icon: '🤫', name: 'Margaret knew about Monday', type: 'Testimony', text: `Lady Margaret said Edmund meant to "go to the magistrate on Monday". The word "magistrate" appears only in the sealed letter in the drawer, which nobody has shown her.` },
+    supperTray: { icon: '🍽️', name: 'Who carried the tray', type: 'Testimony', text: `Mrs. Dobbs: Pennington insisted on carrying Dr. Hale's supper up himself, and went back for the sugar bowl after she had covered the soup.` }
   };
 
   /* ----- step helpers ----- */
@@ -39,16 +55,74 @@ const STORY = (() => {
   const sfx = n => ({ sfx: n });
   const slate = t => ({ slate: t });
   const flag = f => ({ flag: f });
-  const wait = ms => ({ wait: ms });
-  const card = (t, sub) => ({ card: t, sub });
   const flash = c => ({ flash: c });
   const shake = () => ({ shake: 1 });
+  const voteOf = (key, title, qs) => ({ key, title, qs, options: SUSPECT_OPTIONS });
 
   /* ================= EPISODE 1 ================= */
   const ep1 = {
-    n: 1, title: 'Snowbound', logline: 'A dead man, four suspects, and a blizzard that will not let anyone leave.',
+    n: 1, titleScene: 3, title: 'Snowbound', logline: 'A dead man, five people under one roof, and a blizzard that will not let anyone leave.',
     recap: [],
     scenes: [
+      {
+        id: 'cold1', bg: 'dining', amb: 'room', mood: 'calm', fx: 'dust',
+        steps: [
+          slate('Blackwood Manor · 8:52 PM'),
+          N(`Dinner at Blackwood Manor. Snow at the windows, candles on the table, and a host who has been smiling all evening.`),
+          show('vivian', 'l', 'n'), show('hale', 'cl', 'n'), show('edmund', 'c', 's'), show('margaret', 'cr', 'n'), show('pennington', 'r', 'n'),
+          S('edmund', `Friends. Thirty years I have kept this table, and I have never once been sorry for it.`, 's'),
+          S('edmund', `Tonight I am a happy man, because I have finally decided something that has troubled me for a month.`, 's'),
+          N(`Across the table, a fork stops halfway to a mouth. A glass is set down a little too carefully. Nobody looks at anybody.`),
+          S('edmund', `On Monday morning I shall put it right, and I shall thank you all to be at breakfast. Monday will be a day of reckoning.`),
+          S('vivian', `Uncle? What do you mean?`, 'w'),
+          S('edmund', `Monday, my dear. Not a word before. Pennington, brandy in the study. I shall not be disturbed until the gong.`, 's'),
+          N(`He folds his napkin, kisses the top of Vivian's head, and leaves the room. The door clicks shut behind him.`),
+          sfx('door'), hide('edmund'),
+          S('hale', `Forgive me. I need some air.`, 'w'), hide('hale'),
+          N(`Dr. Hale is gone before the plates are cleared.`),
+          S('vivian', `I can't sit here. I shall be in the library.`, 'w'), hide('vivian'),
+          S('margaret', `And I shall lie down with my headache. Pennington, you will see to dessert.`, 'n'), hide('margaret'),
+          S('pennington', `Of course, my lady.`, 'n'),
+          N(`The clock in the hall ticks toward nine. Nobody at that table knows it is the last ordinary hour Blackwood Manor will have.`)
+        ]
+      },
+      {
+        id: 'cold2', bg: 'study_alive', amb: 'fire', mood: 'dread', fx: 'dust',
+        steps: [
+          slate('The Study · 9:33 PM'),
+          show('edmund', 'c', 'n'),
+          N(`The study, half an hour later. The fire has burned low. A gold watch lies cracked on the floor, and the room feels as if someone has only just left it.`),
+          N(`Edmund Blackwood sits very straight, like a man who has won an argument and does not feel like it.`),
+          S('edmund', `Thirty years...`, 'w'),
+          N(`He takes his medicine as he does every night: a small silver measure, a grimace at the bitterness, and he sets it down.`),
+          N(`Then he frowns. He puts a hand flat against his chest, as if to hold something in.`),
+          S('edmund', `Odd...`, 'sh'),
+          sfx('hit'),
+          S('edmund', `Not tonight. Monday. I only need until Monday...`, 'w'),
+          shake(),
+          N(`He tries to stand. The room tilts. He reaches for the bell pull and misses it by a foot.`),
+          sfx('glass'),
+          N(`He falls back into the leather chair, and for a moment he looks like a man listening to the fire.`),
+          N(`The fire settles. In the hall, the clock goes on ticking. Edmund Blackwood does not move again.`),
+          hide('edmund')
+        ]
+      },
+      {
+        id: 'cold3', bg: 'study', amb: 'fire', mood: 'dread', fx: 'dust',
+        steps: [
+          slate('The Study · 9:40 PM'),
+          sfx('knock'),
+          S('pennington', `Master? Dessert is... Master?`, 'n'),
+          N(`Pennington waits. Knocks again. Opens the door.`),
+          sfx('door'),
+          show('pennington', 'c', 'w'),
+          S('pennington', `Sir?`, 'w'),
+          N(`He crosses the room. He touches the old man's wrist, and holds it for a very long time.`),
+          S('pennington', `Oh, sir. Oh, no.`, 'sh'),
+          sfx('hit'),
+          N(`Within the hour, a stable boy will be riding through the blizzard to fetch the only policeman for ten miles.`)
+        ]
+      },
       {
         id: 'arrival', bg: 'exterior', amb: 'wind', mood: 'calm', fx: 'snow',
         steps: [
@@ -81,18 +155,25 @@ const STORY = (() => {
           Y(`Wait outside, Pennington. I'll call for you.`),
           hide('pennington'),
           N(`Alone with the dead, you begin the oldest ritual of your trade: look before you think.`),
-          { menu: { prompt: 'Examine the study', style: 'scene', must: 'Find the body, the desk and the fireplace first.', done: `I've seen enough.`, items: [
+          { menu: { prompt: 'Examine the study', style: 'scene', must: 'Find the body, the desk, the lamp and the fireplace first.', done: `I've seen enough.`, items: [
             { id: 'body', icon: '🪑', label: 'The body', must: true, steps: [
               N(`No wound. No blood. Nothing overturned. His lips have a faint blue tinge, and his right hand is curled against his waistcoat as if he had tried to hold his heart in.`),
               Y(`A struggle would have left a mark. This is poison.`), clue('body')] },
             { id: 'desk', icon: '🥃', label: 'The desk', must: true, steps: [
-              N(`Two crystal glasses stand side by side on the blotter. One holds brandy dregs shaded faintly green. The decanter beside them has its seal broken, but is nearly full.`),
-              Y(`Two glasses. Edmund drank with someone, and that someone walked away unharmed.`), clue('glasses')] },
+              N(`Two crystal brandy glasses stand side by side on the blotter. You lift each in turn. Both smell only of brandy. The decanter's seal is broken, but it is nearly full.`),
+              Y(`If this is poison, it isn't in the brandy.`), clue('brandyGlasses')] },
+            { id: 'lamp', icon: '🪔', label: 'Behind the lamp', must: true, steps: [
+              N(`Half hidden behind the lamp stands a small silver measure, the kind a household uses for medicine. The dregs are greenish and smell sharply bitter.`),
+              Y(`Edmund took something here, and not long ago.`), clue('medicineGlass')] },
             { id: 'floor', icon: '⌚', label: 'The floor', steps: [
-              N(`A gold pocket watch lies by the leg of the chair. The glass is cracked, and the hands have stopped at 9:12.`), clue('watch')] },
+              N(`A gold pocket watch lies by the leg of the chair. The glass is cracked, and the hands have stopped at 9:12.`),
+              Y(`Nine twelve. The moment he fell, presumably.`), clue('watch')] },
+            { id: 'wall', icon: '🧱', label: 'The wall by the door', steps: [
+              N(`A fresh dent in the oak panelling, level with a man's shoulder. A splinter of gold-tinted glass is wedged in it.`),
+              Y(`That glass is from the watch. It was thrown, not dropped.`), clue('wallDent')] },
             { id: 'grate', icon: '🔥', label: 'The fireplace', must: true, steps: [
-              N(`Beneath the grey ash in the grate, one scrap of paper has survived. Charred at the edges. Careful handwriting.`),
-              Y(`Someone burned this in a hurry, and did the job badly.`), clue('ledger')] },
+              N(`At the grate's edge, face-up on the cold ash, lies a scrap of paper. Charred at the corners. The writing is perfectly clear.`),
+              Y(`Whoever burned this left the most important part readable. Careless? Or meant to be read?`), clue('ledger')] },
             { id: 'window', icon: '🪟', label: 'The window', steps: [
               N(`Latched from the inside. The snow on the sill is smooth and unbroken.`),
               Y(`Nobody came or went this way. Whoever did this was already under this roof.`)] },
@@ -102,7 +183,7 @@ const STORY = (() => {
               N(`The desk's bottom drawer has a small brass lock. There is no key on Edmund, and none in the room.`),
               Y(`He locked something away. I need to find that key.`), flag('sawDrawer')] }
           ] } },
-          N(`Poison. A second glass. A name burned down to its initials. Someone in this house sat across from Edmund Blackwood tonight and watched him die.`),
+          N(`Poison. A visitor who drank brandy with him. Medicine taken at the wrong hour. A name burned down to its initials. Someone in this house sat close to Edmund Blackwood tonight and watched him die.`),
           sfx('stinger')
         ]
       },
@@ -117,7 +198,7 @@ const STORY = (() => {
           sfx('gasp'),
           S('vivian', `Poisoned?! Here? With all of us sitting in this house?`, 'sh'),
           S('hale', `Steady, Vivian. Please, steady.`),
-          S('hale', `Inspector, I am Dr. Julian Hale, the family physician. Pennington fetched me to the study at a quarter to ten and I confess I thought it his heart. Edmund took digitalis for a weak heart. A misjudged dose, perhaps...`),
+          S('hale', `Inspector, I am Dr. Julian Hale, the family physician. Pennington fetched me to the study at a quarter to ten and I confess I thought it his heart. Edmund took digitalis for a weak heart, in a nightly tonic of my own mixing. A misjudged dose, perhaps...`),
           clue('digitalisRx'),
           Y(`Perhaps. Or perhaps someone measured it for him.`),
           S('hale', `Dear God. You cannot mean one of us.`, 'w'),
@@ -165,7 +246,7 @@ const STORY = (() => {
               { menu: { prompt: 'Ask Dr. Hale...', style: 'talk', must: 'Ask where he was at nine.', done: `That will do for now.`, items: [
                 { id: 'h_where', label: `"Where were you at nine?"`, must: true, steps: [
                   S('hale', `In the conservatory, among the orchids, with a cigar. Miss Cross was kind enough to keep me company until the gong at half past nine.`), clue('haleAlibi')] },
-                { id: 'h_bag', label: `"Do you carry digitalis?"`, steps: [
+                { id: 'h_bag', label: `"You carry digitalis, Doctor."`, steps: [
                   S('hale', `As any physician does, Inspector. Which is precisely why I told you about it at once.`),
                   Y(`It was convenient of you to mention it.`),
                   S('hale', `It was honest of me to mention it. There is a difference.`, 'w')] },
@@ -232,20 +313,22 @@ const STORY = (() => {
         ]
       }
     ],
+    vote: voteOf('r1', 'Episode 1 verdict', [{ id: 'edmund', text: 'Who do you think killed Edmund Blackwood?' }]),
     watch: {
       pennington: `Caught burning ledger pages in the cellar at 12:41 AM.`,
       margaret: `No alibi. Knew Edmund was troubled about "the fund".`,
       vivian: `Allowance cut last week. Says she was alone in the library.`,
-      hale: `Volunteered the digitalis. Claims Vivian shared his alibi.`
+      hale: `Volunteered the digitalis. Claims Vivian shared his alibi.`,
+      dobbs: `The cook. Not yet questioned.`
     },
-    teaser: `Next: Pennington's explanation, an empty bag, and a vial that turns up where it should not be.`
+    teaser: `Next: Pennington's explanation, a doctor who lies, and a vial that turns up where it should not be.`
   };
 
   /* ================= EPISODE 2 ================= */
   const ep2 = {
-    n: 2, title: 'Ashes', logline: 'The butler talks. The doctor smiles. Someone in the house is lying beautifully.',
+    n: 2, title: 'Ashes', logline: 'The butler talks. The doctor lies. Someone in the house is arranging the evidence.',
     recap: [
-      `Edmund Blackwood, poisoned, shared a drink with someone he trusted.`,
+      `Edmund Blackwood, poisoned, with brandy shared and medicine taken.`,
       `A burnt scrap: "Hartley Orphans' Fund... J.H."`,
       `A letter: "I have known the man thirty years."`,
       `And in the cellar, Pennington was feeding the furnace.`
@@ -262,7 +345,7 @@ const STORY = (() => {
             { t: `"Every page. Now."`, steps: [flag('pressedPen'), S('pennington', `There is only one left, sir. Please do not shout. I have heard enough shouting tonight.`, 'w')] },
             { t: `"Tell me why, Pennington. From the beginning."`, steps: [flag('softPen'), S('pennington', `You are kind, sir. Kinder than I deserve.`)] }
           ] } },
-          S('pennington', `I found the Master dead, and on his desk lay his private account book. Open, as if someone had been reading it in a hurry. I took it before I called anyone.`),
+          S('pennington', `I found the Master dead, and on his desk lay his private account book, open, as if someone had been reading it in haste. I took it before I called anyone.`),
           S('pennington', `I saw the Master's signature on withdrawal after withdrawal from the Orphans' Fund. I thought: he was robbing the children and was ashamed of it. I would not let the world say that of him.`, 'w'),
           Y(`You burned the book to save his name.`),
           S('pennington', `Thirty-one years he gave me a home, sir. It seemed the last service I could do him.`),
@@ -274,8 +357,10 @@ const STORY = (() => {
           Y(`Every one of these falls on a first Thursday. Who visits Blackwood Manor on a first Thursday?`),
           S('pennington', `Why, the doctor, sir. For the Master's heart. They always sat with the books afterwards.`),
           N(`The furnace ticks as it cools. Neither of you says the name.`),
-          Y(`Go to bed, Pennington. And next time, bring me the pages before you light the match.`),
-          S('pennington', `Yes, sir. And thank you, sir.`, 'w'),
+          S('pennington', `Sir, if someone in this house did that to the Master... I will see justice done. If it takes the rest of my life.`, 'a'),
+          clue('penOath'),
+          Y(`Justice is my work, Pennington. Not yours. Go to bed.`),
+          S('pennington', `Yes, sir.`, 'w'),
           hide('pennington')
         ]
       },
@@ -294,9 +379,12 @@ const STORY = (() => {
               clue('haleVivian')] },
             { id: 'v2_night', label: `"Did you sleep?"`, steps: [
               S('vivian', `Not a minute. Every time I close my eyes, I hear Uncle laughing at dinner. He was in such a good mood.`, 'w'),
-              S('vivian', `He said Monday would be "a day of reckonings". I thought he meant me.`)] }
+              S('vivian', `He said Monday would be "a day of reckonings". I thought he meant me.`)] },
+            { id: 'v2_hide', label: `"Is there anything you've left out?"`, steps: [
+              S('vivian', `...No. Nothing. I stood up to stretch, that's all. It's nothing.`, 'w'),
+              N(`She says it too quickly, and looks at the door instead of at you.`)] }
           ] } },
-          N(`A man who lies about his alibi has a reason. You mean to find it.`),
+          N(`A man who lies about his alibi has a reason. A girl who hides something has another. You mean to find both.`),
           hide('vivian')
         ]
       },
@@ -323,14 +411,18 @@ const STORY = (() => {
           { present: { prompt: `Challenge Dr. Hale's alibi`, ok: ['ashtray', 'haleVivian'], hint: 'Something in this room, or something Vivian said.', cost: 0,
             right: [
               S('hale', `Ah.`, 'w'),
-              N(`For a moment, nothing at all moves in his face. Then a small, regretful smile arrives, like a man remembering an appointment.`),
-              S('hale', `Miss Cross is a distraught girl, Inspector, and I am an old man who stepped onto the terrace to smoke. Confusion is natural on a night like this.`),
-              S('hale', `But since we are discussing lies, ask yourself why a young woman with a grudge, no alibi, and a motive in her uncle's will was so very eager to be alone.`, 'a')
+              N(`For a moment nothing in his face moves. Then something gives, the way a held breath gives.`),
+              S('hale', `I lied. Of course I lied. I knew precisely how it would look: the family doctor, the digitalis, a man who had quarrelled with the deceased an hour before he died.`, 'w'),
+              S('hale', `Edmund sent for me at five past nine. He accused me to my face of forging the Fund's signatures. Thirty years, Inspector, and he believed it of me in a single evening.`),
+              S('hale', `I swore on everything I have that I had never touched a penny. He threw his watch at the wall. It struck the panelling beside my head. I left at twenty past, and he was alive. Alive, and cursing me.`, 'a'),
+              clue('haleLeft'),
+              S('hale', `Then I came here and sat in the dark like a fool, because I could not face the dining room.`, 'w')
             ],
             wrong: () => [S('hale', `I'm afraid I don't follow, Inspector.`)] } },
-          S('hale', `Do search where you must. Miss Cross's room, for instance. I should hate to see a guilty person go unseen simply because she is young.`),
-          hide('hale'),
-          N(`He leaves as softly as he came. The orchids hold their breath behind him.`)
+          Y(`You expect me to believe you are innocent.`),
+          S('hale', `I expect nothing. But I am the treasurer of that Fund, Inspector. My initials are on every page of it. Whoever burned that scrap knew exactly whose name to leave legible.`, 'a'),
+          N(`It is the sharpest thing anyone has said all night, and you cannot tell whether it is the truth or a very good lie.`),
+          hide('hale')
         ]
       },
       {
@@ -342,31 +434,34 @@ const STORY = (() => {
           S('dobbs', `Whatever's happened upstairs, Inspector, it never happened in my kitchen.`),
           { menu: { prompt: 'Question the staff', style: 'talk', must: 'Show them what you found in the study.', done: 'That is all, thank you.', items: [
             { id: 'k_decanter', label: `"Could the brandy have been tampered with?"`, steps: [
-              S('dobbs', `Not here. Pennington took a sealed decanter at ten to nine, and one glass. One, mind you.`),
+              S('dobbs', `Not here. Pennington took a sealed decanter at ten to nine, and one glass.`),
               clue('decanterClean')] },
-            { id: 'k_glass', label: `Show Mrs. Dobbs the glasses.`, must: true, steps: [
-              { present: { prompt: 'Show Mrs. Dobbs', ok: ['glasses'], hint: 'Something from the desk.', right: [
-                S('dobbs', `Two glasses? I sent one. But Dr. Hale popped his head in about nine, asking for a clean glass. "Edmund wants company for a nightcap," he says. I gave him one from the rack.`, 'sh'),
+            { id: 'k_glass', label: `Show Mrs. Dobbs the brandy glasses.`, must: true, steps: [
+              { present: { prompt: 'Show Mrs. Dobbs', ok: ['brandyGlasses'], hint: 'Something from the desk.', right: [
+                S('dobbs', `Two glasses? I sent one. But Dr. Hale popped his head in about nine, asking for a clean glass. "Edmund wants company," he says. I gave him one from the rack.`, 'sh'),
                 clue('dobbsGlass')],
-                wrong: () => [S('dobbs', `That's not my business, dear.`)], skip: [] } }] },
+                wrong: () => [S('dobbs', `That's not my business, dear.`)] } }] },
             { id: 'k_pen', label: `Press Pennington on the study.`, must: true, steps: [
               S('pennington', `I would rather not accuse a guest, sir. It is not my place.`, 'w'),
-              { present: { prompt: 'Show Pennington something from the study', ok: ['glasses', 'watch'], hint: `Something from Edmund's desk, or the floor.`, right: [
-                S('pennington', `Then I must speak. At five past nine I saw Dr. Hale go into the study carrying a glass of his own. He came out about twenty past. I thought nothing of it. He is a guest, and the Master's friend.`),
+              { present: { prompt: 'Show Pennington something from the study', ok: ['brandyGlasses', 'watch'], hint: `Something from Edmund's desk, or the floor.`, right: [
+                S('pennington', `Then I must speak. At five past nine I saw Dr. Hale go into the study carrying a glass. I heard a crash from inside at about twelve past. He came out about twenty past. I thought nothing of it. He is a guest, and the Master's friend.`),
                 clue('penSaw')],
-                wrong: () => [S('pennington', `I do not see how that bears on it, sir.`)] } }] }
+                wrong: () => [S('pennington', `I do not see how that bears on it, sir.`)] } }] },
+            { id: 'k_herbs', label: `The herb shelf.`, steps: [
+              N(`Among the thyme and bay sits a battered tin. Inside, dried grey-green leaves: foxglove.`),
+              Y(`Mrs. Dobbs. Foxglove is digitalis.`),
+              S('dobbs', `And I know it, dear! Dr. Hale prescribed me a tea of it for my ankles. Ask him. I'd sooner poison myself than the Master.`, 'a'),
+              clue('foxglove')] }
           ] } },
           hide('dobbs'), hide('pennington'),
-          Y(`Two witnesses. Hale took a clean glass at nine and walked into the study with it.`),
+          Y(`Hale took a clean glass at nine and walked into the study with it. He admits it now. But a man can walk into a room and out of it, and the poison can still be someone else's.`),
           sfx('door'),
-          show('hale', 'c', 'n'),
-          S('hale', `You needn't whisper, Inspector. I heard.`),
-          S('hale', `Yes. Edmund asked me in for a nightcap at five past nine, and I left at twenty past. He was alive, and a little cross, and perfectly well.`),
-          Y(`You told me you were in the conservatory.`),
-          S('hale', `I lied. I knew precisely how it would look: a guest, a physician, a bag of digitalis, and a dead host. A man grows careful.`),
-          S('hale', `If you want a poisoner, look at the girl. Search her room. If I am wrong, I shall apologise on my knees.`, 'a'),
-          N(`His voice is gentle. His logic is almost perfect. You find that more disturbing than any raised voice.`),
-          hide('hale')
+          show('margaret', 'c', 'w'),
+          S('margaret', `Inspector. A word. Julian is a weak man, I have always said so, but never a wicked one.`),
+          S('margaret', `Whereas Vivian... I hate to say it. She has been so strange since Edmund cut her. Have you looked in her room?`, 'w'),
+          Y(`You think I should.`),
+          S('margaret', `I think a guilty conscience leaves things lying about. That is all.`),
+          hide('margaret')
         ]
       },
       {
@@ -377,7 +472,7 @@ const STORY = (() => {
           { menu: { prompt: 'Search the room', style: 'scene', must: 'Check the coat.', done: 'Hold the vial up to the light.', items: [
             { id: 'case', icon: '🧳', label: 'The suitcase', steps: [
               N(`Two dresses, a hairbrush, a train timetable folded to Monday morning.`),
-              Y(`She was planning to leave. Or planning to be somewhere else on Monday.`)] },
+              Y(`She was planning to leave. Or planning to be somewhere on Monday.`)] },
             { id: 'coat', icon: '🧥', label: 'The coat', must: true, steps: [
               N(`In the right pocket, behind a glove: a small glass vial, stoppered with wax. The label is handwritten. "Tincture of Digitalis. J. Hale."`),
               sfx('stinger'), clue('vial')] },
@@ -390,52 +485,36 @@ const STORY = (() => {
           N(`She sees the vial in your hand and stops dead.`),
           S('vivian', `No. No, that isn't mine. I've never seen that in my life!`, 'sh'),
           S('margaret', `Vivian. Oh, child.`, 'w'),
-          S('hale', `I am so sorry, Inspector. I wanted so very much to be wrong.`, 'w'),
-          S('vivian', `You! You took my coat at the door, you... you smiled at me and took my coat!`, 'a'),
+          S('hale', `That is my vial. Inspector, it came from my bag. I did not give it to her.`, 'sh'),
+          S('vivian', `Nobody believes me. Nobody ever... `, 'a'),
           shake(), sfx('slam'),
           N(`She is out of the room before anyone can move. Feet on the stairs. A door at the bottom, flung wide. A gust of snow-wind through the whole house.`),
           S('margaret', `Vivian! Vivian, come back!`, 'sh'),
-          N(`You start for the stairs. But something makes you glance at the window first.`),
-          N(`In the black glass, over your own shoulder, Dr. Hale's reflection is smiling. Only for an instant.`),
-          { cliff: 'hale' }
+          N(`You start for the stairs. Behind you, someone lets out a breath. Not a gasp of shock. A breath of relief.`),
+          N(`You do not turn around in time to see whose.`),
+          { cliff: 'vivian' }
         ]
       }
     ],
+    vote: voteOf('r2', 'Episode 2 verdict', [{ id: 'edmund', text: 'Who do you think killed Edmund Blackwood?' }]),
     watch: {
-      pennington: `Cleared of the murder. Burned evidence to protect Edmund's name.`,
-      margaret: `Watched Vivian run. Still unaccounted for at nine.`,
+      pennington: `Cleared of burning evidence for himself. Swore to see "justice done".`,
+      margaret: `Steered you toward Vivian's room. Still has no alibi.`,
       vivian: `Fled into the blizzard with the vial found in her coat.`,
-      hale: `Lied about his alibi. Admits entering the study. Pointed you at Vivian.`
+      hale: `Lied about his alibi. Admits quarrelling with Edmund. Says he was framed.`,
+      dobbs: `Keeps foxglove, but says the doctor prescribed it.`
     },
-    teaser: `Next: the chase through the snow, a coat in a cloakroom, and one last confrontation.`
+    teaser: `Next: a chase across the ice, a thread that doesn't tie, and a locked room.`
   };
 
   /* ================= EPISODE 3 ================= */
-  const whoStep = { choice: { prompt: 'Who killed Edmund Blackwood?', opts: [] } };
-  const wrong = (id, lines) => ({ t: id.label, steps: [...lines, { cost: 1 }, whoStep] });
-  whoStep.choice.opts = [
-    wrong({ label: 'Pennington, the butler.' }, [
-      S('pennington', `Sir?`, 'sh'),
-      Y(`He burned evidence, but to protect Edmund's name. A man who loves his master does not poison him.`),
-      N(`Pennington lets out a breath he has been holding for thirty-one years.`)]),
-    wrong({ label: 'Lady Margaret, the widow.' }, [
-      S('margaret', `Inspector, how dare...`, 'a'),
-      Y(`She had no alibi. But she had no access to the digitalis, and she is the one person who wanted Edmund to talk.`),
-      N(`Lady Margaret's hand trembles on the arm of her chair. You have the uneasy feeling you've missed something about her.`)]),
-    wrong({ label: 'Vivian, the niece.' }, [
-      S('vivian', `Please. I didn't...`, 'w'),
-      Y(`The vial was in her coat. But a poisoner does not wrap evidence in a glove and hide it in her own pocket. Not unless someone put it there.`),
-      N(`Vivian looks at you as if you have thrown her a rope.`)]),
-    { t: 'Dr. Hale, the physician.', steps: [] }
-  ];
-
   const ep3 = {
-    n: 3, title: 'The Last Glass', logline: 'One storm. One lie. One chance to name a killer before the roads clear.',
+    n: 3, title: 'Thin Ice', logline: 'A girl on the run. A man on trial in his own house. A door that was locked from the outside.',
     recap: [
-      `Pennington burned the Orphans' Fund ledger to save Edmund's name.`,
-      `Hale lied about his alibi, and placed himself in the study.`,
-      `A vial labelled J. Hale turned up in Vivian's coat.`,
-      `Vivian ran into the snow. And Hale smiled.`
+      `Edmund was poisoned, and the evidence points everywhere at once.`,
+      `Dr. Hale lied about his alibi, then said he was being framed.`,
+      `Pennington swore he would see justice done.`,
+      `A vial turned up in Vivian's coat, and Vivian ran into the snow.`
     ],
     scenes: [
       {
@@ -450,13 +529,17 @@ const STORY = (() => {
             { t: `Sit beside her in the snow. "I don't think you did this."`, steps: [flag('gentleViv'), S('vivian', `Nobody has said that to me all night.`, 'w')] },
             { t: `Stand firm. "Running makes you look guilty. Talk to me."`, steps: [flag('firmViv'), S('vivian', `I know how it looks! That's why I ran!`, 'a')] }
           ] } },
-          S('vivian', `Dr. Hale took my coat when I arrived. He was so charming about it. He said I looked cold.`),
-          S('vivian', `After the gong, I went for my gloves and there was something hard in the pocket. A little glass bottle with his name on it.`),
-          S('vivian', `I knew exactly what it would look like. I was going to throw it in the lake.`, 'w'),
-          Y(`Why didn't you tell anyone?`),
-          S('vivian', `Who would believe the girl whose allowance was cut?`, 'w'),
+          S('vivian', `I found that bottle in my coat pocket after the gong. I'd gone to the cloakroom for my gloves. I knew exactly what it would look like. I was going to throw it in the lake.`),
           clue('vivianCoat'),
-          Y(`I would. Come back with me, Vivian. We are going to finish this.`),
+          Y(`The cloakroom is open to the whole house. Anyone could have put it there.`),
+          S('vivian', `That's what frightens me.`, 'w'),
+          Y(`You were holding something back this morning. I need it now.`),
+          S('vivian', `I stood up from my book at half past nine. I heard a door in the corridor and went to the library doorway.`),
+          S('vivian', `Somebody was going into the study carrying a tray. Dark clothes. I only saw a back. I thought it was Pennington, and I went back to my chair.`, 'w'),
+          clue('trayFigure'),
+          Y(`You didn't say so because...`),
+          S('vivian', `Because if it was Pennington, it was nothing. And if it wasn't, I didn't want to be the one who saw.`),
+          Y(`Come back with me, Vivian. We are going to finish this.`),
           S('vivian', `And if you're wrong?`),
           Y(`Then I'll be the first thing the snow covers.`),
           N(`She takes your hand. Above the lake, the sky is the colour of old pewter.`),
@@ -464,99 +547,310 @@ const STORY = (() => {
         ]
       },
       {
-        id: 'margaret2', bg: 'drawing', amb: 'fire', mood: 'calm', fx: 'dust',
+        id: 'aftermath', bg: 'drawing', amb: 'fire', mood: 'tense', fx: 'dust',
         steps: [
-          slate('The Drawing Room · 10:45 AM'),
-          N(`There is one thread left that does not sit right. You pull it before the others arrive.`),
-          show('margaret', 'c', 'w'),
-          { menu: { prompt: 'Speak to Lady Margaret', style: 'talk', must: 'Ask how she knew what Edmund intended.', done: `Thank you, Lady Blackwood.`, items: [
-            { id: 'mg_told', label: `"Did you tell anyone about the fund?"`, must: true, steps: [
-              S('margaret', `Julian. At tea, two days ago. I said Edmund meant to "name names" on Monday. I thought a doctor could calm him.`, 'w'),
-              Y(`Who told you that Edmund meant to name names?`),
-              S('margaret', `He... Edmund mentioned it. In passing.`, 'w'),
-              N(`It is an odd phrase. You file it away. You have the feeling you'll want it later.`),
-              clue('margaretTold')] }
+          slate('The Drawing Room · 11:10 AM'),
+          N(`The household gathers, because you asked them to. Everyone stands very still, the way people do when each of them has decided not to be the first to speak.`),
+          show('vivian', 'l', 'w'), show('hale', 'cl', 'w'), show('margaret', 'cr', 'n'), show('pennington', 'r', 'n'),
+          S('hale', `Inspector. I did not poison Edmund. I did not forge those signatures. I did not put that vial in the girl's coat. I am telling you the truth.`, 'a'),
+          S('margaret', `Julian, please. Every word you say makes it worse.`),
+          S('pennington', `The Master was a good man, sir. Someone in this room is not.`, 'a'),
+          N(`The room waits for you. Everyone is looking at you. And you realise that, for the first time since you arrived, you are not sure what you think.`),
+          { vote: { key: 'p3', title: 'A moment of doubt', intro: 'Dr. Hale has sworn he is innocent. Do you believe him?', qs: [{ id: 'trust', text: 'Do you believe Dr. Hale?' }],
+            options: [{ id: 'yes', label: 'Yes. He is telling the truth.' }, { id: 'no', label: 'No. He is lying.' }, { id: 'unsure', label: 'I cannot tell.' }] } },
+          { switch: () => G.verdict.trust, cases: {
+            yes: [Y(`I believe you, Doctor. That does not make you safe. Somebody has gone to great trouble to make you look guilty.`)],
+            no: [Y(`I don't believe you, Doctor. But belief isn't proof, and I will have proof.`)],
+            unsure: [Y(`I cannot decide whether you are a liar or a very unlucky man, Doctor. That is a dangerous place to leave a case.`)]
+          } },
+          N(`Whatever you believe, one fact is plain: a man with a motive, a lie and a missing vial cannot be left to wander a house where someone has already killed.`),
+          Y(`Dr. Hale, you will wait in the library. I will lock the door and keep the key myself.`),
+          S('hale', `Then I shall wait. But I will say this once more: look at who has been steering you.`, 'a'),
+          S('pennington', `There is a spare on the board in the pantry, sir, as there is for every door. I shall see it is not touched.`),
+          N(`The key turns. It is a very ordinary sound.`),
+          hide('hale'), hide('vivian'), hide('margaret'), hide('pennington')
+        ]
+      },
+      {
+        id: 'afternoon', bg: 'kitchen', amb: 'kitchen', mood: 'tense', fx: 'embers',
+        steps: [
+          slate('Afternoon · 3:30 PM'),
+          N(`The light dies early in December. You spend what is left of it pulling on every thread you've been handed, and seeing which ones come away in your hand.`),
+          { menu: { prompt: 'Afternoon inquiries', style: 'scene', must: 'Ask about the tonic, the doctor\'s bag and Lady Margaret\'s papers before evening.', done: 'Enough for one day.', items: [
+            { id: 'a_tonic', icon: '🧪', label: 'Show Mrs. Dobbs the medicine measure', must: true, steps: [
+              show('dobbs', 'c', 'n'),
+              S('dobbs', `Ask what you like, dear. My hands are busy but my ears are free.`),
+              { present: { prompt: 'Show Mrs. Dobbs', ok: ['medicineGlass'], hint: 'Something small and silver from the study.', right: [
+                S('dobbs', `That's the Master's tonic measure! I wash it every morning. Her ladyship takes his tonic up herself, half past nine every night since his heart turned. Won't let me or Pennington touch it.`, 'sh'),
+                clue('tonicRitual'),
+                Y(`Every night?`),
+                S('dobbs', `Every night, dear. It's the one kindness she did him.`)],
+                wrong: () => [S('dobbs', `I can't see what that's to do with me, dear.`)] } },
+              hide('dobbs')] },
+            { id: 'a_bag', icon: '🧳', label: 'Ask Pennington about the doctor\'s bag', must: true, steps: [
+              show('pennington', 'c', 'n'),
+              Y(`When Dr. Hale arrived last night, where did his bag go?`),
+              S('pennington', `To the cloakroom, sir. Her ladyship carried it there herself. I thought it a kind thing, and not like her.`),
+              clue('penBag'),
+              hide('pennington')] },
+            { id: 'a_desk', icon: '📚', label: `Lady Margaret's writing desk`, must: true, steps: [
+              N(`A tidy desk in a tidy room. A household account book in a firm, upright hand. You open it beside the soot-edged page Pennington saved.`),
+              { if: () => has('thursdays'), then: [
+                N(`The capital E in "Edmund" has a looped tail, exactly like the one on the signatures. You look from one to the other three times.`),
+                Y(`That is not Edmund's hand, and it is not the doctor's.`),
+                clue('handwriting')
+              ], else: [
+                N(`A careful hand, nothing remarkable. If you had the other ledger page to compare, it might mean something.`)
+              ] }] },
+            { id: 'a_margaret', icon: '👵', label: 'Speak with Lady Margaret', steps: [
+              show('margaret', 'c', 'w'),
+              S('margaret', `I have told you everything I know, Inspector.`),
+              Y(`Edmund never told you what he meant to do?`),
+              S('margaret', `Only that on Monday he was going to the magistrate. He wouldn't say about whom. I begged him to wait.`, 'w'),
+              N(`The word hangs in the air. You are certain you have not said it to her. The only place it is written is on a letter that was locked in a drawer.`),
+              clue('margaretSlip'),
+              hide('margaret')] }
           ] } },
-          hide('margaret')
+          N(`Four threads. Each one is thin. Together they pull in a direction you do not like.`)
+        ]
+      },
+      {
+        id: 'death', bg: 'library', amb: 'clock', mood: 'dread', fx: 'dust',
+        steps: [
+          slate('The Library · 7:12 PM'),
+          N(`At seven you carry the doctor's supper tray to the library door. It is heavy with soup and tea, and it is the first thing in two days that has felt like kindness.`),
+          sfx('steps'),
+          N(`The key is in your pocket. You have not let it out of your hand. It turns easily.`),
+          sfx('door'),
+          N(`Dr. Hale sits at the writing desk with his head on his arms, as if he has fallen asleep over a letter.`),
+          Y(`Doctor? Supper.`),
+          N(`He does not move. You do not need to touch his wrist, but you do.`),
+          sfx('hit'),
+          N(`Beside his hand lies a single sheet of cream paper, typed. Three short lines. A signature.`),
+          sfx('door'),
+          show('margaret', 'c', 'n'),
+          N(`Lady Margaret has followed you down the corridor. She stops in the doorway and looks at the body, and then at the note, and for a long moment she looks at nothing at all.`),
+          S('margaret', `Then it is over.`),
+          N(`She does not ask what happened. She does not ask how.`),
+          { cliff: 'margaret' }
+        ]
+      }
+    ],
+    vote: voteOf('r3', 'Episode 3 verdict', [
+      { id: 'edmund', text: 'Who killed Edmund Blackwood?' },
+      { id: 'hale', text: 'Who killed Dr. Hale?' }
+    ]),
+    watch: {
+      pennington: `Swore vengeance. Carried supper. Holds the spare keys.`,
+      margaret: `Her first words: "Then it is over." She did not ask how.`,
+      vivian: `Says she saw someone carrying a tray into the study.`,
+      hale: `Found dead in a room only the Inspector could unlock, beside a typed confession.`,
+      dobbs: `Says Lady Margaret brings the Master's tonic every night.`
+    },
+    teaser: `Next: two graves, one locked door, and the question of whether one killer or two.`
+  };
+
+  /* ================= EPISODE 4 ================= */
+  const ep4 = {
+    n: 4, title: 'Two Graves', logline: 'The last glass, the last lie, and a verdict only you can deliver.',
+    recap: [
+      `Edmund was poisoned. The evidence pointed at one man.`,
+      `That man swore he was framed, and you locked him in the library.`,
+      `You carried his supper. You found him dead.`,
+      `And Lady Margaret did not ask how.`
+    ],
+    scenes: [
+      {
+        id: 'body', bg: 'library', amb: 'clock', mood: 'dread', fx: 'dust',
+        steps: [
+          slate('The Library · 7:20 PM'),
+          N(`Two bodies in one house in two days. Whoever you are dealing with is either very desperate or very patient.`),
+          show('margaret', 'cl', 'n'), show('pennington', 'cr', 'w'),
+          S('pennington', `Sir. Is he...`, 'w'),
+          Y(`Dead, Pennington. Everyone out. Lady Margaret, please wait in the hall.`),
+          hide('margaret'), hide('pennington'),
+          { menu: { prompt: 'Examine the library', style: 'scene', must: 'Look at the body, the tray and the note.', done: 'I know what I am looking at.', items: [
+            { id: 'hbody', icon: '🪑', label: 'Dr. Hale', must: true, steps: [
+              N(`The same blue tinge at the lips. The same hand at the chest. A doctor who knew exactly what was happening to him and could not stop it.`),
+              Y(`The same poison. The same hand, perhaps.`)] },
+            { id: 'tray', icon: '🍵', label: 'The supper tray', must: true, steps: [
+              N(`The soup bowl is scraped clean. In the teacup lie greenish dregs. You lift it. The bitter smell is the same as the silver measure in the study.`),
+              Y(`He was poisoned the same way as Edmund. With the same tonic.`), clue('teaTray')] },
+            { id: 'note', icon: '📄', label: 'The typed note', must: true, steps: [
+              N(`"I killed the Master. I cannot bear what I have done. Forgive me. J. Hale."`),
+              Y(`"The Master."`),
+              N(`Hale called his friend Edmund. Always. Thirty years of "Edmund" in every sentence he spoke to you. He never once said "the Master".`),
+              clue('confessionNote')] },
+            { id: 'typewriter', icon: '⌨️', label: 'The typewriter', steps: [
+              N(`Vivian's machine, on the library desk. Cream stationery from the study drawer lies beside it. Anyone who could reach the study stationery could have fed it in.`)] },
+            { id: 'window', icon: '🪟', label: 'The window', steps: [
+              N(`Latched from the inside again. The door was locked from the outside, with the only key in your pocket.`),
+              Y(`Almost the only key. Pennington mentioned a spare.`)] }
+          ] } },
+          N(`A confession that tidies up an entire case. You have seen those before. They are very rarely written by the dead.`)
+        ]
+      },
+      {
+        id: 'kitchen4', bg: 'kitchen', amb: 'kitchen', mood: 'tense', fx: 'embers',
+        steps: [
+          slate('The Kitchen · 8:05 PM'),
+          show('dobbs', 'c', 'w'),
+          S('dobbs', `Is it true? The doctor? Oh, dear God.`, 'sh'),
+          { menu: { prompt: `Ask Mrs. Dobbs...`, style: 'talk', must: 'Show her the supper tray details.', done: 'Thank you, Mrs. Dobbs.', items: [
+            { id: 'k4_tray', label: 'Show Mrs. Dobbs the teacup.', must: true, steps: [
+              { present: { prompt: 'Show Mrs. Dobbs', ok: ['teaTray'], hint: 'Something from the library.', right: [
+                S('dobbs', `That's off the doctor's tray. I made the soup and the tea myself. Pennington came for it at half past six and wouldn't let me carry it. Said it wasn't right for a woman to climb the stairs with a tray in this weather.`),
+                S('dobbs', `Then he came back down for the sugar bowl, after I'd covered the soup. I turned to the range. That's all.`, 'w'),
+                clue('supperTray')],
+                wrong: () => [S('dobbs', `That's not the tray, dear.`)] } }] },
+            { id: 'k4_food', label: `"Was anything in the soup yourself?"`, steps: [
+              S('dobbs', `Onions, a bone and a prayer, dear. Nothing else.`)] }
+          ] } },
+          hide('dobbs')
+        ]
+      },
+      {
+        id: 'cellar4', bg: 'cellar', amb: 'furnace', mood: 'dread', fx: 'embers',
+        steps: [
+          slate('The Cellar · 8:40 PM'),
+          N(`You go down alone. The furnace is banked low, glowing, patient. This is where it all began, with a butler on his knees and a fire full of ledger pages.`),
+          sfx('steps'),
+          { menu: { prompt: 'Search the furnace', style: 'scene', must: 'Rake through the ash.', done: 'Take the shard and go up.', items: [
+            { id: 'ash', icon: '🔥', label: 'The ash', must: true, steps: [
+              N(`Under a crust of old cinders, fresh ash. And in it, something that catches the glow: a curved shard of brown glass, half a label still stuck to it.`),
+              N(`"...diac Tonic."`),
+              Y(`Hale's Cardiac Tonic. The bottle from Edmund's study cabinet, broken and burned where nobody would look twice.`),
+              clue('tonicShard'), sfx('stinger')] },
+            { id: 'pipes', icon: '🔧', label: 'The pipes', steps: [
+              N(`Cold iron and cobwebs. Nobody has been here in a year.`)] }
+          ] } },
+          N(`Somewhere above you, a door closes softly. A very ordinary sound.`)
+        ]
+      },
+      {
+        id: 'vote4', bg: 'drawing', amb: 'fire', mood: 'tense', fx: 'dust',
+        steps: [
+          slate('The Drawing Room · 9:00 PM'),
+          N(`Before you face them, you lay everything out on the table. Two bodies. One poison. A butler's vow, a widow's careful hand, a niece who ran, a cook with a tin of foxglove, and a dead doctor's typed confession.`),
+          N(`Two deaths. Maybe one killer. Maybe two. It is time to decide.`),
+          { do: () => { G.composure = 3; G.finale = true; G.cleared = {}; } },
+          Y(`Detectives, the case is yours. Name whom you believe killed Edmund Blackwood, and whom you believe killed Dr. Hale. Whatever you decide, I will have to prove.`)
         ]
       },
       {
         id: 'finale', bg: 'drawing', amb: 'fire', mood: 'finale', fx: 'dust',
         steps: [
-          slate('The Drawing Room · 11:00 AM'),
-          { do: () => { G.composure = 3; G.finale = true; } },
-          N(`Everyone you have questioned is here, because you asked them to be. Four people, one fire, and the question the whole house has been afraid to ask.`),
-          show('vivian', 'l', 'w'), show('pennington', 'cl', 'n'), show('margaret', 'cr', 'w'), show('hale', 'r', 'n'),
-          Y(`Edmund Blackwood did not die by accident, and he did not die by his own hand. Someone in this room sat down across from him, poured him a drink, and watched him die.`),
-          S('hale', `Inspector, surely this can wait until the roads clear.`),
-          Y(`No, Doctor. I think it would rather not.`),
-          N(`Your composure is all you have in this room. Three wrong answers, and the killer walks out into the thaw.`),
-          whoStep,
-          S('hale', `This is preposterous. Absurd. A physician does not murder his oldest friend.`, 'a'),
-          Y(`A physician with a hidden debt does. Let me prove it.`),
-          { present: { prompt: 'Why did Edmund have to die?', ok: ['letter', 'ledger', 'thursdays'], cost: 1, hint: `What did Edmund mean to expose on Monday?`,
+          slate('The Drawing Room · 9:20 PM'),
+          N(`Four people in a firelit room, and a question that has been waiting for them all night.`),
+          show('vivian', 'l', 'w'), show('pennington', 'cl', 'n'), show('margaret', 'cr', 'n'), show('dobbs', 'r', 'w'),
+          Y(`Two people have died in this house. I will tell you how.`),
+          { accuse: { qid: 'hale', vote: { key: 'f_hale', title: 'The Reckoning: Dr. Hale', qs: [{ id: 'hale', text: 'Who killed Dr. Hale?' }], options: SUSPECT_OPTIONS.filter(o => o.id !== 'hale') },
+            wrong: {
+              margaret: [S('margaret', `I loved my husband, Inspector. I was in the drawing room. Ask anyone.`, 'a'), Y(`Lady Margaret could not have laid hands on the tray. Pennington carried it. That is not the answer.`)],
+              vivian: [S('vivian', `I was with you all afternoon! You were beside me!`, 'a'), Y(`You were in my sight from noon until the body was found. That is not the answer.`)],
+              dobbs: [S('dobbs', `Me? I'd sooner burn the soup than poison a man with it!`, 'a'), Y(`Mrs. Dobbs made the soup, but she never carried the tray. That is not the answer.`)]
+            },
             right: [
-              Y(`Edmund discovered that someone had been stealing from the Hartley Orphans' Fund and forging his signature. On Monday, he meant to go to the magistrate.`),
-              S('hale', `Forgery? I have a doctor's hand, Inspector, not a forger's.`, 'a'),
-              Y(`Every withdrawal fell on a first Thursday. Your day. And someone told you Edmund knew.`),
-              N(`Margaret looks at the carpet. Hale's hand tightens on the arm of his chair.`)
-            ],
-            wrong: () => [S('hale', `Is that all? That proves nothing at all.`)] } },
-          { present: { prompt: 'How was Edmund poisoned?', ok: ['glasses', 'vial', 'bagEmpty', 'body'], cost: 1, hint: `Something that held the poison, or the one that mattered most.`,
+              hide('margaret'), hide('vivian'), hide('dobbs'), show('pennington', 'c', 'w'),
+              Y(`Pennington. Look at me.`),
+              S('pennington', `Sir?`, 'w'),
+              { present: { prompt: 'Why would anyone kill Dr. Hale?', ok: ['penOath', 'penSaw', 'thursdays'], cost: 1, hint: `What did Pennington believe about the doctor?`,
+                right: [
+                  Y(`You burned the ledger to protect Edmund. You saw Dr. Hale enter the study. And you swore you would see justice done, whatever it cost.`),
+                  Y(`You believed the doctor had murdered your Master, and you could not wait for the law.`),
+                  S('pennington', `...`, 'w')],
+                wrong: () => [S('pennington', `I do not follow, sir.`)] } },
+              { present: { prompt: 'How was Dr. Hale poisoned?', ok: ['teaTray', 'tonicShard', 'supperTray'], cost: 1, hint: `The tray, who carried it, or what was burned.`,
+                right: [
+                  Y(`You took the Master's tonic from the study cabinet, the same tonic that killed him. You put it in the doctor's soup. You carried the tray yourself. You went back for the sugar so you could do it alone.`),
+                  Y(`And you broke the bottle and put it in the furnace, where you had burned the pages the night before.`),
+                  S('pennington', `Sir. I...`, 'sh')],
+                wrong: () => [S('pennington', `That means nothing, sir.`)] } },
+              { present: { prompt: 'Who wrote the confession?', ok: ['confessionNote'], cost: 1, hint: `Dr. Hale never called his friend by that name.`,
+                right: [
+                  Y(`"I killed the Master." Dr. Hale never once called Edmund that. Thirty years, and it was always "Edmund". Only one person in this house speaks that way.`),
+                  N(`The silence is complete. Then Pennington straightens, slowly, and the stiffness goes out of him, and something old and tired comes in.`),
+                  S('pennington', `Yes. It was I.`, 'n'),
+                  S('pennington', `He was a murderer, sir. The Master was dead and the law was snowed in, and the man who killed him sat in the library with his hands folded. I could not bear it. I did what the law was too slow to do.`),
+                  S('pennington', `I put the tonic in his soup. I typed what I thought he ought to have said.`, 'w'),
+                  Y(`Pennington. Dr. Hale did not kill Edmund Blackwood.`),
+                  S('pennington', `...Sir?`, 'sh'),
+                  Y(`He was framed. The scrap in the grate was laid to be found. The signatures were forged by someone else. And the Master's own medicine killed him, brought to him by someone else.`),
+                  N(`Pennington's mouth opens and nothing comes out of it. For thirty-one years he held the whole house together, and in a single sentence you have taken the one thing he thought he had left: that he did it for justice.`),
+                  S('pennington', `Then I have...`, 'sh'),
+                  sfx('hit'), flash('#ffffff')],
+                wrong: () => [S('pennington', `I wrote nothing, sir.`)] } }
+            ] } },
+          hide('pennington'),
+          show('margaret', 'cr', 'n'), show('vivian', 'l', 'w'), show('dobbs', 'r', 'w'),
+          Y(`And now Edmund.`),
+          { accuse: { qid: 'edmund', vote: { key: 'f_edmund', title: 'The Reckoning: Edmund Blackwood', qs: [{ id: 'edmund', text: 'Who killed Edmund Blackwood?' }], options: SUSPECT_OPTIONS.filter(o => o.id !== 'hale') },
+            wrong: {
+              pennington: [S('pennington', `I served the Master for thirty-one years. I would not have harmed a hair of his head.`, 'a'), Y(`Pennington killed in revenge, and for the wrong man. He had no reason to hurt Edmund. That is not the answer.`)],
+              vivian: [S('vivian', `Uncle raised me.`, 'w'), Y(`The vial in your coat was put there for me to find. A poisoner does not hand over her own proof. That is not the answer.`)],
+              dobbs: [S('dobbs', `The foxglove is for my ankles!`, 'a'), Y(`Mrs. Dobbs washes the measure every morning. She never carried the tonic. That is not the answer.`)]
+            },
             right: [
-              Y(`Edmund drank from a sealed decanter, safe. But two glasses stood on that desk, and only one had been sent from the kitchen.`),
-              Y(`The other was yours, Doctor. Already dosed from your own bag. You switched them when Edmund turned to the decanter.`),
-              S('hale', `Fantasy. All of it.`, 'a'),
-              Y(`And afterwards you planted the vial in Vivian's coat, a coat you had taken at the door yourself.`),
-              S('vivian', `I knew it. I knew it was you.`, 'a')
-            ],
-            wrong: () => [S('hale', `You are grasping at straws, Inspector.`)] } },
-          { present: { prompt: 'He claimed he was in the conservatory. Break his alibi.', ok: ['ashtray', 'haleVivian', 'penSaw', 'dobbsGlass'], cost: 1, hint: `Show where he really was, or how he lied about it.`,
-            right: [
-              Y(`Your alibi was the conservatory, with Vivian for company. She never saw you. The ashtray was cold. And two people saw you carry a glass into the study.`),
-              S('hale', `...`, 'sh'),
-              N(`The silence runs on so long you can hear the fire settling. Then Dr. Hale lets out a long, slow breath, and the kindly mask simply slides off.`),
-              sfx('hit'), flash('#ffffff')
-            ],
-            wrong: () => [S('hale', `You can't break what isn't cracked.`)] } },
-          S('hale', `He called me in to say goodbye to thirty years of friendship. One last drink, for old times. I had already dosed my own glass.`, 'n'),
-          S('hale', `I switched them when he turned to the decanter. Edmund was a trusting man. It was the only thing I ever truly admired about him.`),
-          S('hale', `I could not let him ruin me, Inspector. I simply could not.`),
-          N(`Nobody speaks. Pennington is crying silently, upright, the way a servant weeps. Vivian has taken Lady Margaret's hand.`),
-          S('vivian', `Thank you.`, 'w'),
-          Y(`Thank Pennington. He kept the page that mattered.`),
-          { do: () => { G.finale = false; } }
+              hide('vivian'), hide('dobbs'), show('margaret', 'c', 'n'),
+              S('margaret', `This is an outrage, Inspector.`, 'a'),
+              { present: { prompt: 'Why did Edmund have to die?', ok: ['handwriting', 'letter', 'thursdays'], cost: 1, hint: `Who actually forged those signatures?`,
+                right: [
+                  Y(`Edmund meant to take the thefts to the magistrate on Monday. He believed the doctor guilty, because the books had been arranged to say so. But every forged "E" has a looped tail.`),
+                  Y(`The same loop as your household accounts, Lady Margaret.`),
+                  S('margaret', `Anyone could copy a hand.`, 'a')],
+                wrong: () => [S('margaret', `You have nothing, Inspector.`)] } },
+              { present: { prompt: 'How was Edmund poisoned?', ok: ['medicineGlass', 'tonicRitual', 'body', 'teaTray'], cost: 1, hint: `Not the brandy. Something he took every night.`,
+                right: [
+                  Y(`Not the brandy. The tonic. A measure every night at half past nine, poured by a loving wife, and tonight it was far stronger than any doctor would ever have prescribed.`),
+                  Y(`The same bitter smell in the silver measure, and in the doctor's teacup.`),
+                  S('margaret', `A wife may carry her husband's medicine.`, 'w')],
+                wrong: () => [S('margaret', `That proves nothing.`)] } },
+              { present: { prompt: 'She said she was alone. Break it.', ok: ['tonicRitual', 'trayFigure', 'margaretSlip', 'penBag', 'haleLeft'], cost: 1, hint: `Where she said she was, and what she said she knew.`,
+                right: [
+                  Y(`You said you were alone in this room. But Edmund was alive when the doctor left at twenty past nine. At half past, a woman in dark clothes carried a tray into the study. And you knew the word "magistrate", which was written only in a drawer you never opened.`),
+                  Y(`And on the night, you carried the doctor's bag to the cloakroom yourself, so you could take what you needed from it, and plant it later where it would do the most harm.`),
+                  N(`Lady Margaret does not shout. She does not weep. She sits down very slowly in Edmund's chair, folds her hands, and looks at the fire.`),
+                  S('margaret', `Thirty years I sat across the breakfast table from a man who counted the coal.`, 'n'),
+                  S('margaret', `He would have thrown me out with the clothes I stood in. I had debts, Inspector, such debts. I took only what I needed. Julian signed whatever was put in front of him. It was so easy.`),
+                  S('margaret', `And then Edmund found out. And he was going to put it all on Julian, and Julian would have stood in the dock and told them about my handwriting.`, 'a'),
+                  S('margaret', `So I carried his tonic up, as I always did. And I stayed until he was quiet.`),
+                  sfx('hit'), flash('#ffffff')],
+                wrong: () => [S('margaret', `You cannot prove a thing.`)] } }
+            ] } },
+          { do: () => { G.finale = false; } },
+          show('vivian', 'l', 'sh'),
+          S('vivian', `Uncle...`, 'w'),
+          N(`Nobody moves. Pennington is crying silently in the doorway, upright, the way a servant weeps. Vivian has taken Mrs. Dobbs's hand.`)
         ]
       },
       {
         id: 'coda', bg: 'exterior', amb: 'wind', mood: 'dread', fx: 'snow',
         steps: [
-          slate('Blackwood Manor · 1:20 PM'),
+          slate('Blackwood Manor · 2:10 PM'),
           N(`By afternoon the plough has cut a black trench through the drifts, and a police trap crawls up the drive.`),
-          show('hale', 'c', 'n'),
-          N(`Dr. Julian Hale walks out between two constables, wrists in iron, for all the world like a man leaving church.`),
-          S('hale', `You were very clever, Inspector. I shall say so at my trial.`, 's'),
-          S('hale', `But I did not learn what Edmund meant to do from Edmund. Nor from his ledger. Someone in that house has been trading secrets for weeks.`),
-          Y(`Who?`),
-          S('hale', `Ask Lady Margaret who told her what Edmund intended on Monday. Then ask yourself why nobody ever asked her before.`, 'a'),
-          show('margaret', 'l', 'sh'),
-          N(`Lady Margaret's hand goes to the pearls at her throat. For the first time since you arrived, she looks afraid.`),
-          S('margaret', `Inspector, he is lying. He's a murderer, he will say anything...`, 'sh'),
-          N(`You remember her words, so careless: "Edmund mentioned it. In passing."`),
-          N(`Edmund Blackwood told his wife nothing. He told his solicitor nothing. He told nobody but a drawer.`),
+          show('margaret', 'c', 'n'),
+          N(`Lady Blackwood walks out between two constables with her chin up, her gloves on, and her pearls exactly where they belong.`),
+          S('margaret', `You were very thorough, Inspector.`),
+          S('margaret', `But you don't believe I did it all alone, do you? A woman does not owe that much money to a bank.`, 's'),
+          Y(`Who did you owe?`),
+          S('margaret', `Ask Mr. Crane who held the other end of the rope. Ask him why Edmund's letter was addressed to him, and not to the magistrate.`, 'a'),
+          N(`She lets the constable help her into the trap, as graciously as if it were a carriage to the opera.`),
+          N(`You stand in the cold with a murderer's last words in your head. Mr. Crane. The solicitor. The one man Edmund trusted with the truth.`),
+          N(`Down the long white drive, a second carriage is approaching, slowly, out of the thaw.`),
           { cliff: 'margaret' }
         ]
       }
     ],
     watch: {
-      pennington: `Cleared. Grieving.`,
-      vivian: `Cleared. Framed by Dr. Hale.`,
-      hale: `Confessed and arrested. Knew about Edmund's letter before he should have.`,
-      margaret: `Told Hale about Monday, but who told her?`
+      pennington: `Killed Dr. Hale, believing him guilty. Devastated.`,
+      margaret: `Poisoned her husband. Hints at a creditor: "Mr. Crane".`,
+      vivian: `Cleared. Framed.`,
+      hale: `Innocent of everything but a signature he never read. Murdered.`,
+      dobbs: `Cleared. Grieving.`
     },
-    teaser: `Season Two: someone whispered in Lady Margaret's ear. The Blackwood Files are not closed.`,
+    teaser: `Season Two: Mr. Crane is coming up the drive. And Edmund's letter was never meant for the magistrate.`,
     last: true
   };
 
-  return { NAMES, CLUES, episodes: [ep1, ep2, ep3] };
+  return { NAMES, SUSPECTS, SUSPECT_OPTIONS, CLUES, SOLUTION, episodes: [ep1, ep2, ep3, ep4] };
 })();

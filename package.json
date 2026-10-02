@@ -1,0 +1,13 @@
+{
+  "name": "blackwood-files",
+  "version": "1.0.0",
+  "description": "The Blackwood Files: a cinematic murder-mystery night for a group. Open /tv on the big screen, everyone joins from their phone.",
+  "private": true,
+  "main": "server/server.js",
+  "scripts": {
+    "start": "node server/server.js",
+    "test": "node --test"
+  },
+  "engines": { "node": ">=20" },
+  "license": "MIT"
+}

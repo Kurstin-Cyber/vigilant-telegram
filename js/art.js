@@ -93,7 +93,7 @@ const Art = (() => {
         <path d="M720 900 L780 690 L820 690 L880 900 Z" fill="#aab7c9" opacity=".55"/>`);
     },
 
-    study: () => {
+    study: (alive) => {
       return svg(`${room('#2b2219', '#150e08', '#3a2616', '#160b05')}
         ${books(40, 90, 460, 540, 5, 3)}
         ${window_(660, 130, 260, 320)}${curtains(660, 130, 260, 320, '#4a1c1e')}
@@ -104,10 +104,11 @@ const Art = (() => {
         ${glow(760, 530, 200, '#ffd98a', 0.45, 'flicker')}
         <rect x="740" y="540" width="40" height="20" fill="#0b3d2a"/><path d="M765 540 q10 -40 40 -40 h-20 q-20 0 -20 40" fill="#c8a24a"/>
         <g opacity=".95"><ellipse cx="500" cy="740" rx="140" ry="22" fill="#000" opacity=".4"/>${chair(430, 700, '#31150f')}
-        <path d="M470 640 q20 -150 70 -150 q50 0 60 150 z" fill="#0d0907"/><circle cx="525" cy="470" r="38" fill="#0d0907"/></g>
+        ${alive ? '' : '<path d="M470 640 q20 -150 70 -150 q50 0 60 150 z" fill="#0d0907"/><circle cx="525" cy="470" r="38" fill="#0d0907"/>'}</g>
         <rect x="0" y="0" width="1600" height="900" fill="#000" opacity=".15"/>`);
     },
 
+    study_alive: () => BG.study(true),
     library: () => {
       return svg(`${room('#22190f', '#120b06', '#2d1c10', '#120a05')}
         ${books(0, 60, 540, 580, 6, 5)}${books(1060, 60, 540, 580, 6, 9)}
@@ -231,7 +232,8 @@ const Art = (() => {
     margaret: { skin: '#e2c3a8', suit: '#533468', col: '#b78ac9' },
     vivian: { skin: '#e8c4aa', suit: '#5d3b3b', col: '#e0866b' },
     hale: { skin: '#dcb99c', suit: '#59636f', col: '#7fb08a' },
-    dobbs: { skin: '#e0b896', suit: '#6e5438', col: '#d9b36a' }
+    dobbs: { skin: '#e0b896', suit: '#6e5438', col: '#d9b36a' },
+    edmund: { skin: '#d8b08e', suit: '#6a1f26', col: '#c9a06a' }
   };
   const BROWS = {
     n: ['M104 176 q20 -6 38 0', 'M158 176 q20 -6 38 0'],
@@ -272,6 +274,10 @@ const Art = (() => {
       front = `<path d="M92 176 q-4 20 2 40 M208 176 q4 20 -2 40" stroke="#8a8680" stroke-width="12" fill="none" stroke-linecap="round"/>
         <circle cx="123" cy="200" r="21" fill="none" stroke="#c8a24a" stroke-width="3.5"/><circle cx="177" cy="200" r="21" fill="none" stroke="#c8a24a" stroke-width="3.5"/><path d="M144 200 h12" stroke="#c8a24a" stroke-width="3.5"/>
         <path d="M120 238 q30 -12 60 0 q-30 14 -60 0z" fill="#8a8680"/>`;
+    } else if (id === 'edmund') {
+      body = `<path d="M10 440 C10 345 70 305 150 305 C230 305 290 345 290 440 Z" fill="${P.suit}"/><path d="M60 330 L112 440 H20 Z M240 330 L188 440 H280 Z" fill="#3a1015"/><path d="M116 305 L150 385 L184 305 Z" fill="#efe8d8"/><path d="M150 320 l-13 46 h26 z" fill="#c9a06a"/>`;
+      behind = `<path d="M84 196 q-14 -84 66 -88 q80 4 66 88 q-12 -50 -66 -54 q-54 4 -66 54z" fill="#ecebe5"/>`;
+      front = `<path d="M92 176 q-8 36 4 66 M208 176 q8 36 -4 66" stroke="#ecebe5" stroke-width="13" fill="none" stroke-linecap="round"/><path d="M98 226 q4 70 52 74 q48 -4 52 -74 q-14 28 -52 28 q-38 0 -52 -28z" fill="#f1f0ea"/><path d="M118 238 q32 -14 64 0 q-32 18 -64 0z" fill="#f1f0ea"/>`;
     } else if (id === 'dobbs') {
       body = `<path d="M10 440 C10 345 70 305 150 305 C230 305 290 345 290 440 Z" fill="${P.suit}"/><path d="M96 440 V345 q54 -30 108 0 V440 Z" fill="#ece6d8"/><path d="M130 440 V360 h40 V440" fill="#d6cfbd"/>`;
       behind = `<path d="M84 190 q-4 -90 66 -92 q70 2 66 92 q-10 -44 -66 -46 q-56 2 -66 46z" fill="#8a7a6a"/>`;

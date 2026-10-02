@@ -19,8 +19,10 @@ function walk(x) {
     const key = who + '|' + text;
     if (/[A-Za-z]/.test(text) && !out.has(key)) out.set(key, { who, text, e: x.e || 'n', hash: fnv(key) });
   }
-  for (const k of ['steps', 'then', 'else', 'right', 'skip', 'items', 'opts', 'menu', 'choice', 'present']) walk(x[k]);
+  for (const k of ['steps', 'then', 'else', 'right', 'skip', 'items', 'opts', 'menu', 'choice', 'present', 'accuse']) walk(x[k]);
   if (typeof x.wrong === 'function') walk(x.wrong('x'));
+  else if (x.wrong && typeof x.wrong === 'object') Object.values(x.wrong).forEach(walk);
+  if (x.cases) Object.values(x.cases).forEach(walk);
   if (typeof x.if === 'function') { walk(x.then); walk(x.else); }
 }
 STORY.episodes.forEach(ep => ep.scenes.forEach(sc => walk(sc.steps)));

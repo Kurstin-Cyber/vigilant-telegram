@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: blackwood-files
+    runtime: node
+    # Starter (0.5 CPU, 512 MB): always on, so there's no 50-second wake-up when the group sits down.
+    plan: starter
+    buildCommand: "true"
+    startCommand: node server/server.js
+    healthCheckPath: /health
+    envVars:
+      # Rooms are saved here, so a restart or the free plan's sleep doesn't end the night.
+      - key: REDIS_URL
+        fromService:
+          type: keyvalue
+          name: blackwood-store
+          property: connectionString
+
+  - type: keyvalue
+    name: blackwood-store
+    plan: free
+    # Only the app can reach it.
+    ipAllowList: []
+    # Rooms expire on their own after 12 hours; if it ever fills up, drop the oldest.
+    maxmemoryPolicy: allkeys-lru

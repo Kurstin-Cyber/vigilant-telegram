@@ -26,6 +26,7 @@ CAST = {
     'margaret':   (2, 0.88),    # lower, slower
     'vivian':     (7, 1.06),    # bright, quick
     'dobbs':      (8, 0.95),
+    'edmund':     (5, 0.88),    # the host: warm, commanding
 }
 EMOTION_SPEED = {'a': 1.07, 'w': 0.95, 'sh': 1.08, 's': 0.98}
 
@@ -38,6 +39,8 @@ def words(n):
     return words(n // 1000) + ' thousand' + (' ' + words(n % 1000) if n % 1000 else '')
 
 def spoken(t):
+    # respellings for the speech model: it stresses "Edmund" as two hard syllables (ED-MUND); "Edmond" gives the natural ED-mund
+    t = re.sub(r'\bEdmund', 'Edmond', t)
     t = t.replace('Dr.', 'Doctor').replace('Mr.', 'Mister').replace('Mrs.', 'Missus')
     t = re.sub(r'£([\d,]+)', lambda m: words(int(m.group(1).replace(',', ''))) + ' pounds', t)
     t = re.sub(r'\b(\d{1,2}):(\d{2})\b', lambda m: words(int(m.group(1))) + (' oh ' + words(int(m.group(2))) if m.group(2)[0] == '0' else ' ' + words(int(m.group(2)))), t)
