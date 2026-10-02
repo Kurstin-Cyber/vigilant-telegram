@@ -4,7 +4,7 @@ A cinematic, episodic murder mystery that runs in the browser. There's nothing t
 
 - **Three episodes**, each ending on a cliffhanger about the suspects.
 - **Scene-based storytelling**: animated backdrops, character portraits, and typewriter dialogue.
-- **Audio**: a synthesized score with reverb, room ambience (wind, fire, clocks), sound effects, and **spoken dialogue** with a different voice for each character and the narrator.
+- **Audio**: fully voiced. Every line of dialogue and narration is a recording from a neural voice model, with a different voice for each character. The score is orchestral (piano, strings, cello, choir, timpani) and shifts with the mood of each scene, with room ambience and sound effects layered on top.
 - **The story plays itself** (Auto mode). Tap or press Space to move faster.
 - **Your choices and your evidence matter.** You question people, present clues to catch lies, and name the killer in the finale.
 - Progress is saved in the browser.
@@ -15,7 +15,7 @@ Open `index.html`, or enable GitHub Pages (Settings → Pages → Deploy from a 
 
 Best with headphones and the sound up. Browsers only allow sound after a first tap or key press, so the music starts when you first touch the title screen.
 
-Spoken dialogue uses your browser's built-in speech voices, so how it sounds depends on your device (Chrome, Edge and Safari have the best voices). If your browser has no usable voices, the game falls back to text and music. You can switch voices on and off in the Menu or on the title screen.
+The music dips automatically while someone is speaking. You can turn spoken dialogue off in the Menu or on the title screen.
 
 ## Controls
 
@@ -31,4 +31,23 @@ Spoken dialogue uses your browser's built-in speech voices, so how it sounds dep
 - `js/engine.js`: scene runner
 - `js/art.js`: procedural backgrounds and portraits
 - `js/audio.js`: synthesized music and effects
-- `js/voice.js`: spoken dialogue
+- `js/voice.js`: plays the voice recordings
+- `audio/voice/`: one MP3 per line of dialogue (named by a hash of speaker + text)
+- `audio/music/`: the score
+- `tools/`: scripts that generate the voices and the score (see below)
+
+## Regenerating the audio
+
+If you edit story text, regenerate the voices (unchanged lines are skipped):
+
+```
+node tools/extract_lines.js > lines.json
+python3 tools/generate_voices.py lines.json audio/voice     # see the header of the script for setup
+```
+
+To re-render the score: `python3 tools/compose_score.py audio/music` (needs `fluidsynth` and the FluidR3 GM soundfont).
+
+## Audio credits
+
+- Voices: [Kokoro-82M](https://huggingface.co/hexgrad/Kokoro-82M) (Apache-2.0), run with sherpa-onnx.
+- Score: original compositions rendered with the FluidR3 GM soundfont.

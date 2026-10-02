@@ -35,12 +35,59 @@ const Sound = (() => {
     noiseBuf = ctx.createBuffer(1, len, ctx.sampleRate);
     const d = noiseBuf.getChannelData(0); let last = 0;
     for (let i = 0; i < len; i++) { const w = Math.random() * 2 - 1; last = (last + 0.02 * w) / 1.02; d[i] = w * 0.5 + last * 6; }
+    prime(); if (typeof Voice !== 'undefined') Voice.prime();
     // apply whatever the game asked for before sound was unlocked
     const a = wantAmb, m = wantMood; curAmb = curMood = null;
     setAmbience(a); setMood(m);
   }
 
   const ok = () => !!ctx;
+
+  /* ----- recorded score (audio/music/*.mp3), played through two reusable media elements ----- */
+  const SILENT = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=';
+  const TRACKS = ['theme', 'calm', 'tense', 'dread', 'storm', 'finale'];
+  const SYNTH_FALLBACK = { theme: 'calm', storm: 'tense', finale: 'tense' };
+  const mus = [new Audio(), new Audio()]; mus.forEach(a => { a.preload = 'auto'; a.loop = true; });
+  const stingEl = new Audio(); stingEl.preload = 'auto';
+  let musIdx = 0, duckOn = false, trackName = null;
+  const BASE_VOL = 0.9, DUCK = 0.3;
+  const targetVol = () => (muted ? 0 : BASE_VOL * (duckOn ? DUCK : 1));
+  function fade(a, to, ms, done) {
+    clearInterval(a._f);
+    const from = a.volume, t0 = performance.now();
+    a._f = setInterval(() => {
+      const k = Math.min(1, (performance.now() - t0) / ms);
+      a.volume = Math.max(0, Math.min(1, from + (to - from) * k));
+      if (k >= 1) { clearInterval(a._f); if (done) done(); }
+    }, 40);
+  }
+  function playTrack(name, onFail) {
+    const old = mus[musIdx]; musIdx ^= 1; const a = mus[musIdx];
+    trackName = name;
+    a.onerror = () => { if (trackName === name && onFail) onFail(); };
+    a.src = 'audio/music/' + name + '.mp3'; a.volume = 0; a.loop = true;
+    const p = a.play(); if (p && p.catch) p.catch(() => { if (trackName === name && onFail) onFail(); });
+    fade(a, targetVol(), 2600);
+    fade(old, 0, 2600, () => { if (old !== mus[musIdx]) old.pause(); });
+  }
+  function stopTrack() {
+    trackName = null;
+    mus.forEach(a => fade(a, 0, 1800, () => { if (a !== mus[musIdx] || !trackName) a.pause(); }));
+  }
+  function refreshVol() { if (trackName) fade(mus[musIdx], targetVol(), 350); }
+  function duck(on) {
+    duckOn = !!on; refreshVol();
+    if (ok()) ambBus.gain.setTargetAtTime(on ? 0.5 : 1, ctx.currentTime, 0.15);
+  }
+  function sting() {
+    if (muted) return;
+    stingEl.src = 'audio/music/sting.mp3'; stingEl.volume = 0.9;
+    const p = stingEl.play(); if (p && p.catch) p.catch(() => {});
+    if (trackName) fade(mus[musIdx], 0.12, 600);
+  }
+  function prime() {   // let phones play these elements later from timers
+    [mus[musIdx ^ 1], stingEl].forEach(a => { try { a.loop = false; a.src = SILENT; const mine = a.src; const p = a.play(); if (p && p.then) p.then(() => { if (a.src === mine) a.pause(); a.loop = a !== stingEl; }).catch(() => {}); } catch (e) {} });
+  }
   function noise(filterType, freq, q, gain, dest) {
     const src = ctx.createBufferSource(); src.buffer = noiseBuf; src.loop = true;
     const f = ctx.createBiquadFilter(); f.type = filterType; f.frequency.value = freq; f.Q.value = q;
@@ -124,8 +171,15 @@ const Sound = (() => {
     curMood = name;
     fadeOutNodes(musNodes, 3); musNodes = [];
     musTimers.forEach(clearTimeout); musTimers.forEach(clearInterval); musTimers = [];
-    const m = MOODS[name];
+    if (TRACKS.includes(name)) { playTrack(name, () => { if (curMood === name) { trackName = null; startSynth(SYNTH_FALLBACK[name] || name); } }); return; }
+    if (!name || name === 'none') { stopTrack(); return; }
+    stopTrack(); startSynth(name);
+  }
+  function startSynth(name) {
+    const mood = name;
+    const m = MOODS[mood];
     if (!m) return;
+    const stillWanted = () => ok() && (curMood === name || SYNTH_FALLBACK[curMood] === name || curMood === wantMood);
     // drone pad
     m.pad.forEach((mult, i) => {
       const o = ctx.createOscillator(), g = ctx.createGain(), lfo = ctx.createOscillator(), lg = ctx.createGain();
@@ -141,7 +195,7 @@ const Sound = (() => {
     // melodic motif: random walk over the scale, sometimes a dyad
     let step = 2;
     const play = () => {
-      if (!ok() || curMood !== name) return;
+      if (!stillWanted()) return;
       step = Math.max(0, Math.min(m.scale.length - 1, step + Math.floor(Math.random() * 3) - 1));
       const f = m.root * 4 * Math.pow(2, m.scale[step] / 12);
       piano(f, 0.16, musBus);
@@ -152,7 +206,7 @@ const Sound = (() => {
     musTimers.push(setTimeout(play, 800));
     // slow swell
     const swell = () => {
-      if (!ok() || curMood !== name) return;
+      if (!stillWanted()) return;
       m.pad.slice(0, 3).forEach((mult, i) => {
         const t = ctx.currentTime, o = ctx.createOscillator(), g = ctx.createGain(), f = ctx.createBiquadFilter();
         o.type = 'sawtooth'; o.frequency.value = m.root * mult * 2; f.type = 'lowpass'; f.frequency.value = 500;
@@ -164,7 +218,7 @@ const Sound = (() => {
     musTimers.push(setTimeout(swell, 5000));
     // heartbeat for the darkest scenes
     if (m.beat) {
-      musTimers.push(setInterval(() => { if (!ok() || curMood !== name) return; tone(52, 'sine', 0.22, 0.45, musBus, 0, 36); tone(52, 'sine', 0.22, 0.32, musBus, 0.28, 36); }, m.beat * 1000 * 1.6));
+      musTimers.push(setInterval(() => { if (!stillWanted()) return; tone(52, 'sine', 0.22, 0.45, musBus, 0, 36); tone(52, 'sine', 0.22, 0.32, musBus, 0.28, 36); }, m.beat * 1000 * 1.6));
     }
   }
 
@@ -186,6 +240,7 @@ const Sound = (() => {
       tone(55, 'sine', 4, 1, sfxBus, 0, 26);
       [233, 247, 349, 370].forEach((f, i) => tone(f, 'sawtooth', 4, 0.14, sfxBus, 0.05 + i * 0.03));
       burst(2, 0.6, 'lowpass', 300);
+      sting();
     },
     stinger() { tone(196, 'sawtooth', 1.6, 0.16, sfxBus); tone(277, 'sawtooth', 1.6, 0.16, sfxBus); tone(392, 'sawtooth', 1.6, 0.1, sfxBus); }
   };
@@ -197,6 +252,8 @@ const Sound = (() => {
   function setMuted(m) {
     muted = m;
     if (ok()) master.gain.setTargetAtTime(m ? 0 : 0.9, ctx.currentTime, 0.05);
+    refreshVol();
+    if (m) { try { stingEl.pause(); } catch (e) {} }
   }
   /* RMS of what is currently playing, 0..1 (used by tests to confirm sound is not silent) */
   function level() {
@@ -207,5 +264,5 @@ const Sound = (() => {
   }
   function unlock() { if (ctx && ctx.state === 'suspended') ctx.resume(); }
 
-  return { init, unlock, setAmbience, setMood, sfx, blip, setMuted, isMuted: () => muted, isReady: () => !!ctx, level };
+  return { init, unlock, setAmbience, setMood, sfx, blip, setMuted, duck, isMuted: () => muted, isReady: () => !!ctx, level, track: () => trackName };
 })();

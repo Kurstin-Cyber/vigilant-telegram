@@ -439,7 +439,7 @@ const STORY = (() => {
     ],
     scenes: [
       {
-        id: 'snow', bg: 'garden', amb: 'wind', mood: 'dread', fx: 'snow',
+        id: 'snow', bg: 'garden', amb: 'wind', mood: 'storm', fx: 'snow',
         steps: [
           slate('The Grounds · 9:20 AM'),
           N(`The cold is a physical blow. Her footprints run toward the frozen lake and the boathouse, filling in even as you follow them.`),
@@ -464,7 +464,7 @@ const STORY = (() => {
         ]
       },
       {
-        id: 'margaret2', bg: 'drawing', amb: 'fire', mood: 'tense', fx: 'dust',
+        id: 'margaret2', bg: 'drawing', amb: 'fire', mood: 'calm', fx: 'dust',
         steps: [
           slate('The Drawing Room · 10:45 AM'),
           N(`There is one thread left that does not sit right. You pull it before the others arrive.`),
@@ -481,7 +481,7 @@ const STORY = (() => {
         ]
       },
       {
-        id: 'finale', bg: 'drawing', amb: 'fire', mood: 'tense', fx: 'dust',
+        id: 'finale', bg: 'drawing', amb: 'fire', mood: 'finale', fx: 'dust',
         steps: [
           slate('The Drawing Room · 11:00 AM'),
           { do: () => { G.composure = 3; G.finale = true; } },

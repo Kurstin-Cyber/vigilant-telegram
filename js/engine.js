@@ -159,10 +159,21 @@ const has = id => !!G && G.clues.includes(id);
     E.dname.style.display = who ? '' : 'none';
     spotlight(who);
     if (e) setExpr(who, e);
-    const spoke = voiceOn() && Voice.speak(who, text);
+    const spoke = voiceOn() && /[A-Za-z]/.test(text) && Voice.speak(who, text);
+    if (spoke) warmAhead();
     typeText(text, who, () => beat(text, done), spoke ? 52 : 24, !spoke);
   }
   const voiceOn = () => settings.voice && !settings.muted;
+  function warmAhead() { // fetch the next couple of recordings so they start instantly
+    let n = 0;
+    for (let fi = frames.length - 1; fi >= 0 && n < 2; fi--) {
+      const f = frames[fi];
+      for (let i = f.i; i < f.steps.length && n < 2; i++) {
+        const s = f.steps[i];
+        if (s.nar !== undefined) { Voice.warm(null, s.nar); n++; } else if (s.say) { Voice.warm(s.say, s.t); n++; }
+      }
+    }
+  }
   function applyVoice() { Voice.setOn(voiceOn()); }
 
   /* ---------- scenes ---------- */
@@ -443,7 +454,7 @@ const has = id => !!G && G.clues.includes(id);
     $('tint').classList.remove('on'); E.stage.classList.remove('cliffmode', 'fade');
     hideChar('all'); E.chars.innerHTML = '';
     G = G || newG();
-    setBg('exterior', true); setFx('snow'); Sound.setAmbience('wind'); Sound.setMood('calm');
+    setBg('exterior', true); setFx('snow'); Sound.setAmbience('wind'); Sound.setMood('theme');
     $('hud').classList.remove('on');
     const canContinue = !!(save.cur && save.cur.snap);
     overlay(`<div class="titlescreen"><div class="eyebrow">A murder mystery in episodes</div><h1>The Blackwood Files</h1><div class="sub">Season One</div>
